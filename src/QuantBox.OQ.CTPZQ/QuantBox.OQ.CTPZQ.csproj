@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Framework\bin\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Program Files %28x86%29\SmartQuant Ltd\OpenQuant\Framework\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="QuantBox.CSharp2CTPZQ">
       <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTPZQ.dll</HintPath>
     </Reference>
@@ -72,18 +76,35 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
+    <Compile Include="BrokerItem.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
-    <Compile Include="QBProvider.ExecutionProvider.cs" />
-    <Compile Include="QBProvider.InstrumentProvider.cs" />
-    <Compile Include="QBProvider.MarketDataProvider.cs" />
+    <Compile Include="CTPZQProvider.ExecutionProvider.cs" />
+    <Compile Include="CTPZQProvider.InstrumentProvider.cs" />
+    <Compile Include="CTPZQProvider.MarketDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QBProvider.CTPZQ.cs" />
-    <Compile Include="QBProvider.Provider.cs" />
-    <Compile Include="QBProvider.Settings.cs" />
+    <Compile Include="CTPZQProvider.CTPZQ.cs" />
+    <Compile Include="CTPZQProvider.Provider.cs" />
+    <Compile Include="CTPZQProvider.Settings.cs" />
     <Compile Include="ServerItem.cs" />
+    <Compile Include="ServersManagerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ServersManagerForm.Designer.cs">
+      <DependentUpon>ServersManagerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ServersManagerTypeEditor.cs" />
     <Compile Include="WinAPI.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ServersManagerForm.resx">
+      <DependentUpon>ServersManagerForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\DataSources\BrokerItem.datasource" />
+    <None Include="Properties\DataSources\ServerItem.datasource" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

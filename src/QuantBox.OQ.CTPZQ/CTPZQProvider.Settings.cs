@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Windows.Forms;
 using System.Xml.Linq;
 using QuantBox.CSharp2CTPZQ;
 using SmartQuant;
-using SmartQuant.Providers;
+using System.Drawing.Design;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace QuantBox.OQ.CTPZQ
 {
-    partial class QBProvider
+    partial class CTPZQProvider
     {
         private const string CATEGORY_ACCOUNT = "Account";
         private const string CATEGORY_BARFACTORY = "Bar Factory";
@@ -69,14 +67,6 @@ namespace QuantBox.OQ.CTPZQ
             set { _ApiTempPath = value; }
         }
 
-        [Category("Settings - Other")]
-        [Description("是否输出日志到控制台")]
-        [DefaultValue(true)]
-        public bool OutputLogToConsole
-        {
-            get;
-            set;
-        }
 
         [Category("Settings - Time")]
         [Description("警告！仅保存行情数据时才用交易所时间。交易时使用交易所时间将导致Bar生成错误")]
@@ -172,6 +162,15 @@ namespace QuantBox.OQ.CTPZQ
             set { accountsList = value; }
         }
 
+        private BindingList<BrokerItem> brokersList = new BindingList<BrokerItem>();
+        [Category("Settings"), Editor(typeof(ServersManagerTypeEditor), typeof(UITypeEditor)),
+        Description("点击(...)查看经纪商列表")]
+        public BindingList<BrokerItem> Brokers
+        {
+            get { return brokersList; }
+            set { brokersList = value; }
+        }
+
         [CategoryAttribute(CATEGORY_INFO)]
         [Description("插件版本信息")]
         public string Version
@@ -201,7 +200,6 @@ namespace QuantBox.OQ.CTPZQ
         private void InitSettings()
         {
             ApiTempPath = Framework.Installation.TempDir.FullName;
-            OutputLogToConsole = true;
             ResumeType = ZQTHOST_TE_RESUME_TYPE.ZQTHOST_TERT_QUICK;
             HedgeFlagType = TZQThostFtdcHedgeFlagType.Speculation;
 
@@ -213,11 +211,11 @@ namespace QuantBox.OQ.CTPZQ
             //_DefaultOpenClosePrefix = OpenPrefix + ";" + ClosePrefix+";"+CloseTodayPrefix + ";" + CloseYesterdayPrefix;
             LastPricePlusNTicks = 10;
 
-            serversList.ListChanged += new ListChangedEventHandler(ServersList_ListChanged);
-            accountsList.ListChanged += new ListChangedEventHandler(AccountsList_ListChanged);
-
             LoadAccounts();
             LoadServers();
+
+            serversList.ListChanged += ServersList_ListChanged;
+            accountsList.ListChanged += AccountsList_ListChanged;
         }
 
         void ServersList_ListChanged(object sender, ListChangedEventArgs e)
@@ -236,33 +234,19 @@ namespace QuantBox.OQ.CTPZQ
         void ServerItem_ListChanged(object sender, EventArgs e)
         {
             SettingsChanged();
-        }        
-
-        private System.Timers.Timer timerSettingsChanged = new System.Timers.Timer(10000);
-        void SettingsChanged()
-        {
-            //发现会多次触发，想法减少频率才好
-            if (false == timerSettingsChanged.Enabled)
-            {
-                timerSettingsChanged.Elapsed += new System.Timers.ElapsedEventHandler(timerSettingsChanged_Elapsed);
-                timerSettingsChanged.AutoReset = false;
-            }
-            //将上次已经开始的停掉
-            timerSettingsChanged.Enabled = false;
-            timerSettingsChanged.Enabled = true;
         }
 
-        void timerSettingsChanged_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        public void SettingsChanged()
         {
             SaveAccounts();
             SaveServers();
-
-            timerSettingsChanged.Elapsed -= new System.Timers.ElapsedEventHandler(timerSettingsChanged_Elapsed);
         }
 
         private string accountsFile = string.Format(@"{0}\CTPZQ.Accounts.xml", Framework.Installation.IniDir);
         void LoadAccounts()
         {
+            accountsList.Clear();
+
             try
             {
                 var accounts = from c in XElement.Load(accountsFile).Elements("Account")
@@ -298,39 +282,52 @@ namespace QuantBox.OQ.CTPZQ
         private string serversFile = string.Format(@"{0}\CTPZQ.Servers.xml", Framework.Installation.IniDir);
         void LoadServers()
         {
+            serversList.Clear();
+
             try
             {
                 var servers = from c in XElement.Load(serversFile).Elements("Server")
-                          select c;
+                              select c;
 
-                foreach (var server in servers)
-                {
-                    ServerItem si = new ServerItem();
-                    si.Label = server.Attribute("Label").Value;
-                    si.BrokerID = server.Attribute("BrokerID").Value;
-                    si.UserProductInfo = server.Attribute("UserProductInfo").Value;
-                    si.AuthCode = server.Attribute("AuthCode").Value;
-
-                    string[] tdarr = server.Attribute("Trading").Value.Split(';');
-                    foreach (string s in tdarr)
-                    {
-                        if (!string.IsNullOrEmpty(s))
-                            si.Trading.Add(s);
-                    }
-
-                    string[] mdarr = server.Attribute("MarketData").Value.Split(';');
-                    foreach (string s in mdarr)
-                    {
-                        if (!string.IsNullOrEmpty(s))
-                            si.MarketData.Add(s);
-                    }
-
-                    serversList.Add(si);
-                }
+                serversList = ParseServers(servers);
             }
             catch (Exception)
             {
             }
+        }
+
+        BindingList<ServerItem> ParseServers(IEnumerable<XElement> servers)
+        {
+            BindingList<ServerItem> serversList = new BindingList<ServerItem>();
+
+            foreach (var server in servers)
+            {
+                ServerItem si = new ServerItem()
+                {
+                    Label = server.Attribute("Label").Value,
+                    BrokerID = server.Attribute("BrokerID").Value,
+                    UserProductInfo = server.Attribute("UserProductInfo").Value,
+                    AuthCode = server.Attribute("AuthCode").Value
+                };
+
+                string[] tdarr = server.Attribute("Trading").Value.Split(';');
+                foreach (string s in tdarr)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        si.Trading.Add(s);
+                }
+
+                string[] mdarr = server.Attribute("MarketData").Value.Split(';');
+                foreach (string s in mdarr)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        si.MarketData.Add(s);
+                }
+
+                serversList.Add(si);
+            }
+
+            return serversList;
         }
 
         void SaveServers()
@@ -353,6 +350,33 @@ namespace QuantBox.OQ.CTPZQ
                 root.Add(ser);
             }
             root.Save(serversFile);
+        }
+
+        private readonly string brokersFile = string.Format(@"{0}\CTPZQ.Brokers.xml", Framework.Installation.IniDir);
+        public void LoadBrokers()
+        {
+            brokersList.Clear();
+
+            try
+            {
+                var brokers = from c in XElement.Load(brokersFile).Elements("Broker")
+                              select c;
+
+                foreach (var broker in brokers)
+                {
+                    BrokerItem bi = new BrokerItem()
+                    {
+                        Label = broker.Attribute("Label").Value
+                    };
+
+                    bi.Server = ParseServers(broker.Elements("Server"));
+
+                    brokersList.Add(bi);
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

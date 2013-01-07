@@ -9,7 +9,7 @@ using QuantBox.CSharp2CTPZQ;
 
 namespace QuantBox.OQ.CTPZQ
 {
-    public partial class QBProvider : IInstrumentProvider
+    public partial class CTPZQProvider : IInstrumentProvider
     {
         public event SecurityDefinitionEventHandler SecurityDefinition;
 
@@ -19,7 +19,8 @@ namespace QuantBox.OQ.CTPZQ
             {
                 if (!_bTdConnected)
                 {
-                    this.EmitError(-1,-1,"交易没有连接，无法获取合约列表");
+                    EmitError(-1, -1, "交易没有连接，无法获取合约列表");
+                    tdlog.Error("交易没有连接，无法获取合约列表");
                     return;
                 }
 
@@ -111,7 +112,7 @@ namespace QuantBox.OQ.CTPZQ
                     FIXSecurityDefinition definition = new FIXSecurityDefinition
                     {
                         SecurityReqID = request.SecurityReqID,
-                        SecurityResponseID = request.SecurityReqID,
+                        //SecurityResponseID = request.SecurityReqID,
                         SecurityResponseType = request.SecurityRequestType,
                         TotNoRelatedSym = 1//有个除0错误的问题
                     };
@@ -126,7 +127,7 @@ namespace QuantBox.OQ.CTPZQ
                     FIXSecurityDefinition definition = new FIXSecurityDefinition
                     {
                         SecurityReqID = request.SecurityReqID,
-                        SecurityResponseID = request.SecurityReqID,
+                        //SecurityResponseID = request.SecurityReqID,
                         SecurityResponseType = request.SecurityRequestType,
                         TotNoRelatedSym = list.Count
                     };
@@ -176,17 +177,7 @@ namespace QuantBox.OQ.CTPZQ
                     definition.AddField(EFIXField.SecurityExchange, inst.ExchangeID);
                     definition.AddField(EFIXField.Currency, "CNY");//Currency.CNY
                     definition.AddField(EFIXField.SecurityDesc, inst.InstrumentName);
-                    definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);
-
-                    //try
-                    //{
-                    //    definition.AddField(EFIXField.MaturityDate, DateTime.ParseExact(inst.ExpireDate, "yyyyMMdd", null));
-                    //}
-                    //catch (System.Exception ex)
-                    //{
-                    	
-                    //}
-                    
+                    definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);                    
                     //还得补全内容
 
                     if (SecurityDefinition != null)

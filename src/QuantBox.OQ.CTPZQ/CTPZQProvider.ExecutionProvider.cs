@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace QuantBox.OQ.CTPZQ
 {
-    public partial class QBProvider : IExecutionProvider
+    public partial class CTPZQProvider : IExecutionProvider
     {
         private Dictionary<SingleOrder, OrderRecord> orderRecords = new Dictionary<SingleOrder, OrderRecord>();
 
@@ -23,7 +23,7 @@ namespace QuantBox.OQ.CTPZQ
 
             if (IsConnected)
             {
-                Console.WriteLine(string.Format("GetBrokerInfo:{0}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")));
+                tdlog.Info("GetBrokerInfo");
                 //TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
                 //TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
                 //timerAccount.Enabled = false;

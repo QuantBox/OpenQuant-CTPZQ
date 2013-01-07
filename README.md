@@ -14,9 +14,10 @@
 2. 复制QuantBox.OQ.CTPZQ.dll这个SQ插件，确保此插件的版本正确
 3. 找到OpenQuant接口插件目录C:\Program Files\SmartQuant Ltd\OpenQuant\Bin\
 4. 复制thostmduserapiSSE.dll、thosttraderapiSSE.dll两个CTP的dll到此目录
-5. 复制QuantBox.C2CTPZQ.dll、QuantBox.CSharp2CTPZQ.dll、QuantBox.Helper.CTPZQ.dll三个dll到此目录
+5. 复制QuantBox.C2CTPZQ.dll、QuantBox.CSharp2CTPZQ.dll、QuantBox.Helper.CTPZQ.dll、NLog.dll到此目录
+6. 复制CTPZQ.nlog到此目录，或自己修改
 6. 找到软件的插件配置文件C:\Documents and Settings\Administrator\Application Data\SmartQuant Ltd\OpenQuant\Framework\ini\framework.xml
-7. 添加`<plugin enabled="True" assembly="QuantBox.OQ.CTPZQ" type="QuantBox.OQ.CTPZQ.QBProvider" x64="False" />`到对应位置
+7. 添加`<plugin enabled="True" assembly="QuantBox.OQ.CTPZQ" type="QuantBox.OQ.CTPZQ.CTPZQProvider" x64="False" />`到对应位置
 8. 如何使用请查看插件的使用说明
 
 ## 如何开发

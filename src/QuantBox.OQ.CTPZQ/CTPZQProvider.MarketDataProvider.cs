@@ -8,7 +8,7 @@ using SmartQuant.Providers;
 
 namespace QuantBox.OQ.CTPZQ
 {
-    public partial class QBProvider:IMarketDataProvider
+    public partial class CTPZQProvider:IMarketDataProvider
     {
         private IBarFactory factory;
         private IMarketDataFilter marketDataFilter;
@@ -86,7 +86,8 @@ namespace QuantBox.OQ.CTPZQ
                     case DataManager.MARKET_DATA_SUBSCRIBE:
                         if (!_bMdConnected)
                         {
-                            EmitError(-1,-1,"行情服务器没有连接,无法订阅行情");
+                            EmitError(-1, -1, "行情服务器没有连接,无法订阅行情");
+                            mdlog.Error("行情服务器没有连接,无法订阅行情");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -106,13 +107,12 @@ namespace QuantBox.OQ.CTPZQ
                             }
 
                             _dictAltSymbol2Instrument[altSymbol] = inst;
-                            Console.WriteLine("MdApi:订阅合约 {0} {1}",altSymbol,altExchange);
+                            mdlog.Info("MdApi:订阅合约 {0} {1}", altSymbol, altExchange);
                             MdApi.MD_Subscribe(m_pMdApi, altSymbol, altExchange);
                        
                         }
                         if (!_bTdConnected)
                         {
-                            EmitError(-1, -1, "交易服务器没有连接，无法保证持仓真实");
                             return;
                         }
                         TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
@@ -122,7 +122,7 @@ namespace QuantBox.OQ.CTPZQ
                     case DataManager.MARKET_DATA_UNSUBSCRIBE:
                         if (!_bMdConnected)
                         {
-                            EmitError(-1, -1, "行情服务器没有连接，退订合约无效");
+                            mdlog.Error("行情服务器没有连接，退订合约无效");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -134,8 +134,7 @@ namespace QuantBox.OQ.CTPZQ
                             string altExchange = inst.GetSecurityExchange(this.Name);
 
                             _dictDepthMarketData.Remove(altSymbol);
-
-                            Console.WriteLine("MdApi:取消订阅 {0} {1}", altSymbol,altExchange);
+                            mdlog.Info("MdApi:取消订阅 {0} {1}", altSymbol, altExchange);
                             MdApi.MD_Unsubscribe(m_pMdApi, altSymbol,altExchange);
                         }
                         break;
@@ -172,11 +171,7 @@ namespace QuantBox.OQ.CTPZQ
 
 
         #region OpenQuant3接口的新方法
-        public IMarketDataFilter MarketDataFilter
-        {
-            get { return marketDataFilter; }
-            set { marketDataFilter = value; }
-        }
+        public IMarketDataFilter MarketDataFilter { get; set; }
         #endregion
     }
 }
