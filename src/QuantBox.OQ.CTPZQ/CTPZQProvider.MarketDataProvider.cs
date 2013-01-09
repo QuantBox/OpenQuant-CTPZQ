@@ -11,7 +11,6 @@ namespace QuantBox.OQ.CTPZQ
     public partial class CTPZQProvider:IMarketDataProvider
     {
         private IBarFactory factory;
-        private IMarketDataFilter marketDataFilter;
 
         public event MarketDataRequestRejectEventHandler MarketDataRequestReject;
         public event MarketDataSnapshotEventHandler MarketDataSnapshot;
@@ -107,7 +106,7 @@ namespace QuantBox.OQ.CTPZQ
                             }
 
                             _dictAltSymbol2Instrument[altSymbol] = inst;
-                            mdlog.Info("MdApi:订阅合约 {0} {1}", altSymbol, altExchange);
+                            mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
                             MdApi.MD_Subscribe(m_pMdApi, altSymbol, altExchange);
                        
                         }
@@ -134,7 +133,7 @@ namespace QuantBox.OQ.CTPZQ
                             string altExchange = inst.GetSecurityExchange(this.Name);
 
                             _dictDepthMarketData.Remove(altSymbol);
-                            mdlog.Info("MdApi:取消订阅 {0} {1}", altSymbol, altExchange);
+                            mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
                             MdApi.MD_Unsubscribe(m_pMdApi, altSymbol,altExchange);
                         }
                         break;

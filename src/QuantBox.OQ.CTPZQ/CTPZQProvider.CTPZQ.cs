@@ -341,6 +341,10 @@ namespace QuantBox.OQ.CTPZQ
         #region 断开连接
         private void _Disconnect()
         {
+            timerDisconnect.Enabled = false;
+            timerAccount.Enabled = false;
+            timerPonstion.Enabled = false;
+
             CTPZQAPI.GetInstance().__RegInstrumentDictionary(null);
             CTPZQAPI.GetInstance().__RegInstrumentCommissionRateDictionary(null);
             //CTPZQAPI.GetInstance().__RegInstrumentMarginRateDictionary(null);
@@ -610,9 +614,9 @@ namespace QuantBox.OQ.CTPZQ
                     pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
                     volume);
 
-                if (null != marketDataFilter)
+                if (null != MarketDataFilter)
                 {
-                    Trade t = marketDataFilter.FilterTrade(trade, instrument.Symbol);
+                    Trade t = MarketDataFilter.FilterTrade(trade, instrument.Symbol);
                     if (null != t)
                     {
                         EmitNewTradeEvent(instrument, t);
@@ -640,9 +644,9 @@ namespace QuantBox.OQ.CTPZQ
                     pDepthMarketData.AskVolume1
                 );
 
-                if (null != marketDataFilter)
+                if (null != MarketDataFilter)
                 {
-                    Quote q = marketDataFilter.FilterQuote(quote, instrument.Symbol);
+                    Quote q = MarketDataFilter.FilterQuote(quote, instrument.Symbol);
                     if (null != q)
                     {
                         EmitNewQuoteEvent(instrument, q);
