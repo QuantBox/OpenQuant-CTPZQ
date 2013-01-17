@@ -2,5 +2,6 @@
 <Brokers>
 	<Broker Label="华宝证券">
 		<Server Label="华宝证券模拟" BrokerID="2011" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://116.228.234.67:41205" MarketData="tcp://116.228.234.67:41213" />
+		<Server Label="华宝证券实盘" BrokerID="2011" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://222.66.55.163:41205" MarketData="tcp://222.66.55.163:41213" />
 	</Broker>
 </Brokers>
