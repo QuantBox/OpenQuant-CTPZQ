@@ -95,7 +95,6 @@ namespace QuantBox.OQ.CTPZQ
         //private Dictionary<string, CZQThostFtdcInstrumentMarginRateField> _dictMarginRate = new Dictionary<string, CZQThostFtdcInstrumentMarginRateField>();
         //记录
         private Dictionary<string, DataRecord> _dictAltSymbol2Instrument = new Dictionary<string, DataRecord>();
-        //private Hashtable marketDataRecords = Hashtable.Synchronized(new Hashtable());
 
         //用于行情的时间，只在登录时改动，所以要求开盘时能得到更新
         private int _yyyy;
@@ -674,20 +673,20 @@ namespace QuantBox.OQ.CTPZQ
 
             if(record.MarketDepthRequested)
             {
-                EmitNewMarketDepth(instrument, Clock.Now, 0, MDSide.Ask, pDepthMarketData.AskPrice1, pDepthMarketData.AskVolume1);
-                EmitNewMarketDepth(instrument, Clock.Now, 0, MDSide.Bid, pDepthMarketData.BidPrice1, pDepthMarketData.BidVolume1);
+                EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Ask, pDepthMarketData.AskPrice1, pDepthMarketData.AskVolume1);
+                EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Bid, pDepthMarketData.BidPrice1, pDepthMarketData.BidVolume1);
 
-                EmitNewMarketDepth(instrument, Clock.Now, 1, MDSide.Ask, pDepthMarketData.AskPrice2, pDepthMarketData.AskVolume2);
-                EmitNewMarketDepth(instrument, Clock.Now, 1, MDSide.Bid, pDepthMarketData.BidPrice2, pDepthMarketData.BidVolume2);
+                EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Ask, pDepthMarketData.AskPrice2, pDepthMarketData.AskVolume2);
+                EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Bid, pDepthMarketData.BidPrice2, pDepthMarketData.BidVolume2);
 
-                EmitNewMarketDepth(instrument, Clock.Now, 2, MDSide.Ask, pDepthMarketData.AskPrice3, pDepthMarketData.AskVolume3);
-                EmitNewMarketDepth(instrument, Clock.Now, 2, MDSide.Bid, pDepthMarketData.BidPrice3, pDepthMarketData.BidVolume3);
+                EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Ask, pDepthMarketData.AskPrice3, pDepthMarketData.AskVolume3);
+                EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Bid, pDepthMarketData.BidPrice3, pDepthMarketData.BidVolume3);
 
-                EmitNewMarketDepth(instrument, Clock.Now, 3, MDSide.Ask, pDepthMarketData.AskPrice4, pDepthMarketData.AskVolume4);
-                EmitNewMarketDepth(instrument, Clock.Now, 3, MDSide.Bid, pDepthMarketData.BidPrice4, pDepthMarketData.BidVolume4);
+                EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Ask, pDepthMarketData.AskPrice4, pDepthMarketData.AskVolume4);
+                EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Bid, pDepthMarketData.BidPrice4, pDepthMarketData.BidVolume4);
 
-                EmitNewMarketDepth(instrument, Clock.Now, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
-                EmitNewMarketDepth(instrument, Clock.Now, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+                EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
+                EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
             }
         }
 
