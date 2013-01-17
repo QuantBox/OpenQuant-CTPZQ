@@ -23,7 +23,7 @@ namespace QuantBox.OQ.CTPZQ
         public event MarketDataEventHandler NewMarketData;
         public event MarketDepthEventHandler NewMarketDepth;
         public event QuoteEventHandler NewQuote;
-        public event TradeEventHandler NewTrade;        
+        public event TradeEventHandler NewTrade;
 
         #region IMarketDataProvider
         [Category(CATEGORY_BARFACTORY)]
@@ -77,68 +77,117 @@ namespace QuantBox.OQ.CTPZQ
 
         public void SendMarketDataRequest(FIXMarketDataRequest request)
         {
-            
-            lock (this)
+            if (!_bMdConnected)
             {
-                switch (request.SubscriptionRequestType)
+                EmitError(-1, -1, "行情服务器没有连接");
+                mdlog.Error("行情服务器没有连接");
+                return;
+            }
+
+            bool bSubscribe = false;
+            bool bTrade = false;
+            bool bQuote = false;
+            bool bMarketDepth = false;
+            if (request.NoMDEntryTypes > 0)
+            {
+                switch (request.GetMDEntryTypesGroup(0).MDEntryType)
                 {
-                    case DataManager.MARKET_DATA_SUBSCRIBE:
-                        if (!_bMdConnected)
+                    case '0':
+                    case '1':
+                        if (request.MarketDepth != 1)
                         {
-                            EmitError(-1, -1, "行情服务器没有连接,无法订阅行情");
-                            mdlog.Error("行情服务器没有连接,无法订阅行情");
-                            return;
+                            bMarketDepth = true;
+                            break;
                         }
-                        for (int i = 0; i < request.NoRelatedSym; ++i)
-                        {
-                            FIXRelatedSymGroup group = request.GetRelatedSymGroup(i);
-
-                            //通过订阅的方式，由平台传入合约对象，在行情接收处将要使用到合约
-                            CZQThostFtdcDepthMarketDataField DepthMarket;
-                            Instrument inst = InstrumentManager.Instruments[group.Symbol];
-                            string altSymbol = inst.GetSymbol(this.Name);
-                            string altExchange = inst.GetSecurityExchange(this.Name);
-
-                            if (!_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
-                            {
-                                DepthMarket = new CZQThostFtdcDepthMarketDataField();
-                                _dictDepthMarketData.Add(altSymbol, DepthMarket);
-                            }
-
-                            _dictAltSymbol2Instrument[altSymbol] = inst;
-                            mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
-                            MdApi.MD_Subscribe(m_pMdApi, altSymbol, altExchange);
-                       
-                        }
-                        if (!_bTdConnected)
-                        {
-                            return;
-                        }
-                        TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
-                        timerPonstion.Enabled = false;
-                        timerPonstion.Enabled = true;
+                        bQuote = true;
                         break;
-                    case DataManager.MARKET_DATA_UNSUBSCRIBE:
-                        if (!_bMdConnected)
-                        {
-                            mdlog.Error("行情服务器没有连接，退订合约无效");
-                            return;
-                        }
-                        for (int i = 0; i < request.NoRelatedSym; ++i)
-                        {
-                            FIXRelatedSymGroup group = request.GetRelatedSymGroup(i);
-
-                            Instrument inst = InstrumentManager.Instruments[group.Symbol];
-                            string altSymbol = inst.GetSymbol(this.Name);
-                            string altExchange = inst.GetSecurityExchange(this.Name);
-
-                            _dictDepthMarketData.Remove(altSymbol);
-                            mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
-                            MdApi.MD_Unsubscribe(m_pMdApi, altSymbol,altExchange);
-                        }
+                    case '2':
+                        bTrade = true;
                         break;
-                    default:
-                        throw new ArgumentException("Unknown subscription type: " + request.SubscriptionRequestType.ToString());
+                }
+            }
+            bSubscribe = (request.SubscriptionRequestType == DataManager.MARKET_DATA_SUBSCRIBE);
+
+            if (bSubscribe)
+            {
+                for (int i = 0; i < request.NoRelatedSym; ++i)
+                {
+                    FIXRelatedSymGroup group = request.GetRelatedSymGroup(i);
+                    Instrument inst = InstrumentManager.Instruments[group.Symbol];
+
+                    //将用户合约转成交易所合约
+                    string altSymbol = inst.GetSymbol(this.Name);
+                    string altExchange = inst.GetSecurityExchange(this.Name);
+
+                    DataRecord record;
+                    if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
+                    {
+                        record = new DataRecord();
+                        record.Instrument = inst;
+                        _dictAltSymbol2Instrument[altSymbol] = record;
+
+                        mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
+                        MdApi.MD_Subscribe(m_pMdApi, altSymbol, altExchange);
+
+                        if (_bTdConnected)
+                        {
+                            TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
+                            timerPonstion.Enabled = false;
+                            timerPonstion.Enabled = true;
+                        }
+                    }
+
+                    //记录行情,同时对用户合约与交易所合约进行映射
+                    CZQThostFtdcDepthMarketDataField DepthMarket;
+                    if (!_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
+                    {
+                        _dictDepthMarketData.Add(altSymbol, DepthMarket);
+                    }
+
+                    if (bTrade)
+                        record.TradeRequested = true;
+                    if (bQuote)
+                        record.QuoteRequested = true;
+                    if (bMarketDepth)
+                        record.MarketDepthRequested = true;
+
+                    if (bMarketDepth)
+                    {
+                        inst.OrderBook.Clear();
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < request.NoRelatedSym; ++i)
+                {
+                    FIXRelatedSymGroup group = request.GetRelatedSymGroup(i);
+                    Instrument inst = InstrumentManager.Instruments[group.Symbol];
+
+                    //将用户合约转成交易所合约
+                    string altSymbol = inst.GetSymbol(this.Name);
+                    string altExchange = inst.GetSecurityExchange(this.Name);
+
+                    DataRecord record;
+                    if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
+                    {
+                        break;
+                    }
+
+                    if (bTrade)
+                        record.TradeRequested = false;
+                    if (bQuote)
+                        record.QuoteRequested = false;
+                    if (bMarketDepth)
+                        record.MarketDepthRequested = false;
+
+                    if (!record.TradeRequested && !record.QuoteRequested && !record.MarketDepthRequested)
+                    {
+                        _dictDepthMarketData.Remove(altSymbol);
+                        _dictAltSymbol2Instrument.Remove(altSymbol);
+                        mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
+                        MdApi.MD_Unsubscribe(m_pMdApi, altSymbol, altExchange);
+                    }
                 }
             }
         }
@@ -164,6 +213,14 @@ namespace QuantBox.OQ.CTPZQ
             if (factory != null)
             {
                 factory.OnNewTrade(instrument, trade);
+            }
+        }
+
+        private void EmitNewMarketDepth(IFIXInstrument instrument, MarketDepth marketDepth)
+        {
+            if (NewMarketDepth != null)
+            {
+                NewMarketDepth(this, new MarketDepthEventArgs(marketDepth, instrument, this));
             }
         }
         #endregion
