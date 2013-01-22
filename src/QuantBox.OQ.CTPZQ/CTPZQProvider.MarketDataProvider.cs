@@ -118,6 +118,11 @@ namespace QuantBox.OQ.CTPZQ
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
+                    CZQThostFtdcInstrumentField _Instrument;
+                    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
+                    {
+                        altExchange = _Instrument.ExchangeID;
+                    }
 
                     DataRecord record;
                     if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
@@ -167,6 +172,11 @@ namespace QuantBox.OQ.CTPZQ
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
+                    CZQThostFtdcInstrumentField _Instrument;
+                    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
+                    {
+                        altExchange = _Instrument.ExchangeID;
+                    }
 
                     DataRecord record;
                     if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
