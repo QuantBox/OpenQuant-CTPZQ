@@ -95,7 +95,7 @@
             this.textBoxUrl.Name = "textBoxUrl";
             this.textBoxUrl.Size = new System.Drawing.Size(412, 20);
             this.textBoxUrl.TabIndex = 2;
-            this.textBoxUrl.Text = "https://github.com/QuantBox/OpenQuant-CTPZQ/raw/master/CTPZQ.Brokers.xml";
+            this.textBoxUrl.Text = "https://raw.github.com/QuantBox/OpenQuant-CTPZQ/master/CTPZQ.Brokers.xml";
             // 
             // buttonUpdate
             // 
