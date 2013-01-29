@@ -708,8 +708,13 @@ namespace QuantBox.OQ.CTPZQ
                 }
             }
 
-            if(price!=0&&size!=0)
+            if (price != 0 && size != 0)
             {
+                EmitNewMarketDepth(instrument, new MarketDepth(datatime, "", position, insert, ask, price, size));
+            }
+            else
+            {
+                insert = MDOperation.Delete;
                 EmitNewMarketDepth(instrument, new MarketDepth(datatime, "", position, insert, ask, price, size));
             }
         }
