@@ -6,6 +6,7 @@ using SmartQuant.Providers;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using QuantBox.CSharp2CTPZQ;
+using System.Text.RegularExpressions;
 
 namespace QuantBox.OQ.CTPZQ
 {
@@ -173,7 +174,7 @@ namespace QuantBox.OQ.CTPZQ
                         }
                     }
 
-                    definition.AddField(EFIXField.Symbol, inst.InstrumentID);
+                    definition.AddField(EFIXField.Symbol, GetYahooSymbol(inst.InstrumentID, inst.ExchangeID));
                     definition.AddField(EFIXField.SecurityExchange, inst.ExchangeID);
                     definition.AddField(EFIXField.Currency, "CNY");//Currency.CNY
                     definition.AddField(EFIXField.SecurityDesc, inst.InstrumentName);
@@ -227,6 +228,33 @@ SZETF 8 150001*/
                     break;
             }
             return securityType;
+        }
+
+        private string GetYahooSymbol(string InstrumentID,string ExchangeID)
+        {
+            return string.Format("{0}.{1}", InstrumentID, ExchangeID.Substring(0, 2));
+        }
+
+        private string GetApiSymbol(string Symbol)
+        {
+            var match = Regex.Match(Symbol, @"(\d+)\.(\w+)");
+            if (match.Success)
+            {
+                var code = match.Groups[1].Value;
+                return code;
+            }
+            return Symbol;
+        }
+
+        private string GetApiExchange(string Symbol)
+        {
+            var match = Regex.Match(Symbol, @"(\d+)\.(\w+)");
+            if (match.Success)
+            {
+                var code = match.Groups[2].Value;
+                return code;
+            }
+            return Symbol;
         }
     }
 }

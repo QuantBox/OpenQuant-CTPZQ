@@ -569,19 +569,20 @@ namespace QuantBox.OQ.CTPZQ
         private DateTime _dateTime = DateTime.Now;
         private void OnRtnDepthMarketData(IntPtr pApi, ref CZQThostFtdcDepthMarketDataField pDepthMarketData)
         {
+            string symbol = GetYahooSymbol(pDepthMarketData.InstrumentID, pDepthMarketData.ExchangeID);
             DataRecord record;
-            if (!_dictAltSymbol2Instrument.TryGetValue(pDepthMarketData.InstrumentID, out record))
+            if (!_dictAltSymbol2Instrument.TryGetValue(symbol, out record))
             {
-                mdlog.Warn("合约{0}不在订阅列表中却收到了数据", pDepthMarketData.InstrumentID);
+                mdlog.Warn("合约{0}不在订阅列表中却收到了数据", symbol);
                 return;
             }
             Instrument instrument = record.Instrument;
 
             CZQThostFtdcDepthMarketDataField DepthMarket;
-            _dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket);
+            _dictDepthMarketData.TryGetValue(symbol, out DepthMarket);
 
             //将更新字典的功能提前，因为如果一开始就OnTrade中下单，涨跌停没有更新
-            _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
+            _dictDepthMarketData[symbol] = pDepthMarketData;
 
             if (TimeMode.LocalTime == _TimeMode)
             {
@@ -591,11 +592,18 @@ namespace QuantBox.OQ.CTPZQ
             else
             {
                 //直接按HH:mm:ss来解析，测试过这种方法目前是效率比较高的方法
-                int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
-                int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
-                int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
+                try
+                {
+                    int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
+                    int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
+                    int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
 
-                _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+                    _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+                }
+                catch(Exception ex)
+                {
+                    _dateTime = Clock.Now;
+                }
             }
 
             if (record.TradeRequested)
@@ -724,13 +732,14 @@ namespace QuantBox.OQ.CTPZQ
             if (0 == pRspInfo.ErrorID)
             {
                 CZQThostFtdcDepthMarketDataField DepthMarket;
-                if (!_dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket))
+                string symbol = GetYahooSymbol(pDepthMarketData.InstrumentID, pDepthMarketData.ExchangeID);
+                if (!_dictDepthMarketData.TryGetValue(symbol, out DepthMarket))
                 {
                     //没找到此元素，保存一下
-                    _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
+                    _dictDepthMarketData[symbol] = pDepthMarketData;
                 }
 
-                tdlog.Info("已经接收查询深度行情 {0}", pDepthMarketData.InstrumentID);
+                tdlog.Info("已经接收查询深度行情 {0}", symbol);
                 //通知单例
                 CTPZQAPI.GetInstance().FireOnRspQryDepthMarketData(pDepthMarketData);
             }
@@ -789,6 +798,7 @@ namespace QuantBox.OQ.CTPZQ
             Instrument inst = InstrumentManager.Instruments[order.Symbol];
             string altSymbol = inst.GetSymbol(this.Name);
             string altExchange = inst.GetSecurityExchange(this.Name);
+            string _altSymbol = GetApiSymbol(altSymbol);
             double tickSize = inst.TickSize;
 
             CZQThostFtdcInstrumentField _Instrument;
@@ -796,6 +806,7 @@ namespace QuantBox.OQ.CTPZQ
             {
                 //从合约列表中取交易所名与tickSize，不再依赖用户手工设置的参数了
                 tickSize = _Instrument.PriceTick;
+                _altSymbol = _Instrument.InstrumentID;
                 altExchange = _Instrument.ExchangeID;
             }
             
@@ -839,7 +850,7 @@ namespace QuantBox.OQ.CTPZQ
                 else
                 {
                     //正好能整除，不操作
-                }    
+                }
             }
 
             if (0 == DepthMarket.UpperLimitPrice
@@ -863,7 +874,7 @@ namespace QuantBox.OQ.CTPZQ
 
             string szCombOffsetFlag;
 
-            _dbInMemInvestorPosition.GetPositions(altSymbol,
+            _dbInMemInvestorPosition.GetPositions(_altSymbol,
                     TZQThostFtdcPosiDirectionType.Net, HedgeFlagType,
                     out YdPosition, out TodayPosition,
                     out nLongFrozen, out nShortFrozen);
@@ -925,7 +936,7 @@ namespace QuantBox.OQ.CTPZQ
                 {
                     case OrdType.Limit:
                         nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
+                            _altSymbol,
                             altExchange,
                             order.Side == Side.Buy ? TZQThostFtdcDirectionType.Buy : TZQThostFtdcDirectionType.Sell,
                             it.szCombOffsetFlag,
@@ -941,7 +952,7 @@ namespace QuantBox.OQ.CTPZQ
                         //if (bSupportMarketOrder)
                         {
                             nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
+                            _altSymbol,
                             altExchange,
                             order.Side == Side.Buy ? TZQThostFtdcDirectionType.Buy : TZQThostFtdcDirectionType.Sell,
                             it.szCombOffsetFlag,
@@ -952,11 +963,11 @@ namespace QuantBox.OQ.CTPZQ
                             TZQThostFtdcTimeConditionType.IOC,
                             TZQThostFtdcContingentConditionType.Immediately,
                             order.StopPx);
-                        } 
+                        }
                         //else
                         //{
                         //    nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                        //    altSymbol,
+                        //    _altSymbol,
                         //    altExchange,
                         //    order.Side == Side.Buy ? TZQThostFtdcDirectionType.Buy : TZQThostFtdcDirectionType.Sell,
                         //    it.szCombOffsetFlag,
@@ -1254,7 +1265,8 @@ namespace QuantBox.OQ.CTPZQ
                 //比较无语，测试平台上会显示很多无效数据，有关期货的还会把正确的数据给覆盖，所以临时这样处理
                 if (pInstrument.ProductClass != TZQThostFtdcProductClassType.Futures)
                 {
-                    _dictInstruments[pInstrument.InstrumentID] = pInstrument;
+                    string symbol = GetYahooSymbol(pInstrument.InstrumentID,pInstrument.ExchangeID);
+                    _dictInstruments[symbol] = pInstrument;
                 }
                 
                 if (bIsLast)

@@ -20,8 +20,8 @@ namespace QuantBox.OQ.CTPZQ
 
         private bool disposed;
 
-        private static readonly Logger mdlog = LogManager.GetLogger("M");
-        private static readonly Logger tdlog = LogManager.GetLogger("T");
+        private static readonly Logger mdlog = LogManager.GetLogger("SM");
+        private static readonly Logger tdlog = LogManager.GetLogger("ST");
 
         public CTPZQProvider()
         {

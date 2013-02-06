@@ -118,9 +118,11 @@ namespace QuantBox.OQ.CTPZQ
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
+                    string _altSymbol = GetApiSymbol(altSymbol);
                     CZQThostFtdcInstrumentField _Instrument;
                     if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
                     {
+                        _altSymbol = _Instrument.InstrumentID;
                         altExchange = _Instrument.ExchangeID;
                     }
 
@@ -131,8 +133,8 @@ namespace QuantBox.OQ.CTPZQ
                         record.Instrument = inst;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
-                        mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
-                        MdApi.MD_Subscribe(m_pMdApi, altSymbol, altExchange);
+                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol,_altSymbol,altExchange);
+                        MdApi.MD_Subscribe(m_pMdApi, _altSymbol, altExchange);
 
                         if (_bTdConnected)
                         {
@@ -172,9 +174,11 @@ namespace QuantBox.OQ.CTPZQ
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
+                    string _altSymbol = GetApiSymbol(altSymbol);
                     CZQThostFtdcInstrumentField _Instrument;
                     if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
                     {
+                        _altSymbol = _Instrument.InstrumentID;
                         altExchange = _Instrument.ExchangeID;
                     }
 
@@ -195,8 +199,8 @@ namespace QuantBox.OQ.CTPZQ
                     {
                         _dictDepthMarketData.Remove(altSymbol);
                         _dictAltSymbol2Instrument.Remove(altSymbol);
-                        mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
-                        MdApi.MD_Unsubscribe(m_pMdApi, altSymbol, altExchange);
+                        mdlog.Info("取消合约 {0} {1} {2}", altSymbol, _altSymbol, altExchange);
+                        MdApi.MD_Unsubscribe(m_pMdApi, _altSymbol, altExchange);
                     }
                 }
             }
