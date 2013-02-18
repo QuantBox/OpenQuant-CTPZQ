@@ -58,43 +58,9 @@ namespace QuantBox.OQ.CTPZQ
                     }
                     else
                     {
-                        if (FIXSecurityType.Future == securityType)
+                        if (securityType == GetSecurityType(inst))
                         {
-                            if (TZQThostFtdcProductClassType.Futures == inst.ProductClass
-                                || TZQThostFtdcProductClassType.EFP == inst.ProductClass)
-                            {
-                                ++flag;
-                            }
-                        }
-                        else if (FIXSecurityType.MultiLegInstrument == securityType)//理解上是否有问题
-                        {
-                            if (TZQThostFtdcProductClassType.Combination == inst.ProductClass)
-                            {
-                                ++flag;
-                            }
-                        }
-                        else if (FIXSecurityType.Option == securityType)
-                        {
-                            if (TZQThostFtdcProductClassType.Options == inst.ProductClass)
-                            {
-                                ++flag;
-                            }
-                        }
-                        else if (FIXSecurityType.CommonStock == securityType)
-                        {
-                            if (TZQThostFtdcProductClassType.StockA == inst.ProductClass
-                                || TZQThostFtdcProductClassType.StockB == inst.ProductClass)
-                            {
-                                ++flag;
-                            }
-                        }
-                        else if (FIXSecurityType.ExchangeTradedFund == securityType)
-                        {
-                            if (TZQThostFtdcProductClassType.ETF == inst.ProductClass
-                                || TZQThostFtdcProductClassType.ETFPurRed == inst.ProductClass)
-                            {
-                                ++flag;
-                            }
+                            ++flag;
                         }
                     }
                     
@@ -134,30 +100,7 @@ namespace QuantBox.OQ.CTPZQ
                     };
 
                     {
-                        string securityType2;
-                        switch (inst.ProductClass)
-                        {
-                            case TZQThostFtdcProductClassType.Futures:
-                                securityType2 = FIXSecurityType.Future;
-                                break;
-                            case TZQThostFtdcProductClassType.Combination:
-                                securityType2 = FIXSecurityType.MultiLegInstrument;//此处是否理解上有不同
-                                break;
-                            case TZQThostFtdcProductClassType.Options:
-                                securityType2 = FIXSecurityType.Option;
-                                break;
-                            case TZQThostFtdcProductClassType.StockA:
-                            case TZQThostFtdcProductClassType.StockB:
-                                securityType2 = GetSecurityTypeFromProductID(inst.ProductID);
-                                break;
-                            case TZQThostFtdcProductClassType.ETF:
-                            case TZQThostFtdcProductClassType.ETFPurRed:
-                                securityType2 = FIXSecurityType.ExchangeTradedFund;
-                                break;
-                            default:
-                                securityType2 = FIXSecurityType.NoSecurityType;
-                                break;
-                        }
+                        string securityType2 = GetSecurityType(inst);
                         definition.AddField(EFIXField.SecurityType, securityType2);
                     }
                     {
@@ -178,7 +121,7 @@ namespace QuantBox.OQ.CTPZQ
                     definition.AddField(EFIXField.SecurityExchange, inst.ExchangeID);
                     definition.AddField(EFIXField.Currency, "CNY");//Currency.CNY
                     definition.AddField(EFIXField.SecurityDesc, inst.InstrumentName);
-                    definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);                    
+                    definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);            
                     //还得补全内容
 
                     if (SecurityDefinition != null)
@@ -194,18 +137,53 @@ namespace QuantBox.OQ.CTPZQ
             return a1.InstrumentID.CompareTo(a2.InstrumentID);
         }
 
-/*
-从CTPZQ中遍历出来的所有ID
-GC 6 090002
-SHETF 8 500001
-SHA 6 600000
-SZA 6 000001
-SZBONDS 6 100213
-RC 6 131800
-SZETF 8 150001*/
-        private string GetSecurityTypeFromProductID(string ProductID)
+        /*
+         * 上海证券交易所证券代码分配规则
+         * http://www.docin.com/p-417422186.html
+         * 
+         * http://wenku.baidu.com/view/f2e9ddf77c1cfad6195fa706.html
+         */
+        private string GetSecurityType(CZQThostFtdcInstrumentField inst)
         {
-            string securityType;
+            string securityType = FIXSecurityType.NoSecurityType;
+            switch (inst.ProductClass)
+            {
+                case TZQThostFtdcProductClassType.Futures:
+                    securityType = FIXSecurityType.Future;
+                    break;
+                case TZQThostFtdcProductClassType.Combination:
+                    securityType = FIXSecurityType.MultiLegInstrument;//此处是否理解上有不同
+                    break;
+                case TZQThostFtdcProductClassType.Options:
+                    securityType = FIXSecurityType.Option;
+                    break;
+                case TZQThostFtdcProductClassType.StockA:
+                case TZQThostFtdcProductClassType.StockB:
+                    securityType = GetSecurityTypeStock(inst.ProductID,inst.InstrumentID);
+                    break;
+                case TZQThostFtdcProductClassType.ETF:
+                case TZQThostFtdcProductClassType.ETFPurRed:
+                    securityType = GetSecurityTypeETF(inst.ProductID, inst.InstrumentID);
+                    break;
+                default:
+                    securityType = FIXSecurityType.NoSecurityType;
+                    break;
+            }
+            return securityType;
+        }
+
+        /*
+        从CTPZQ中遍历出来的所有ID
+        GC 6 090002
+        SHETF 8 500001
+        SHA 6 600000
+        SZA 6 000001
+        SZBONDS 6 100213
+        RC 6 131800
+        SZETF 8 150001*/
+        private string GetSecurityTypeStock(string ProductID,string InstrumentID)
+        {
+            string securityType = FIXSecurityType.CommonStock;
             switch (ProductID)
             {
                 case "SHA":
@@ -213,11 +191,42 @@ SZETF 8 150001*/
                     securityType = FIXSecurityType.CommonStock;
                     break;
                 case "SHBONDS":
+                    {
+                        int i = Convert.ToInt32(InstrumentID.Substring(0, 3));
+                        if (i == 0)
+                        {
+                            securityType = FIXSecurityType.Index;
+                        }
+                        else if (i < 700)
+                        {
+                            securityType = FIXSecurityType.USTreasuryBond;
+                        }
+                        else if (i < 800)
+                        {
+                            securityType = FIXSecurityType.CommonStock;
+                        }
+                        else
+                        {
+                            securityType = FIXSecurityType.USTreasuryBond;
+                        }
+                    }
+                    break;
                 case "SZBONDS":
+                    {
+                        int i = Convert.ToInt32(InstrumentID.Substring(0, 2));
+                        if (i == 39)
+                        {
+                            securityType = FIXSecurityType.Index;
+                        }
+                        else
+                        {
+                            securityType = FIXSecurityType.USTreasuryBond;
+                        }
+                    }
+                    break;
                 case "GC":
                 case "RC":
-                    //此处债券种类太多，想返回一个能在导入对话框显示的居然不行，不想再试了
-                    securityType = FIXSecurityType.CommonStock;
+                    securityType = FIXSecurityType.USTreasuryBond;
                     break;
                 case "SHETF":
                 case "SZETF":
@@ -225,6 +234,51 @@ SZETF 8 150001*/
                     break;
                 default:
                     securityType = FIXSecurityType.NoSecurityType;
+                    break;
+            }
+            return securityType;
+        }
+
+        private string GetSecurityTypeETF(string ProductID, string InstrumentID)
+        {
+            string securityType = FIXSecurityType.ExchangeTradedFund;
+            switch (ProductID)
+            {
+                case "SHA":
+                    securityType = FIXSecurityType.CommonStock;
+                    break;
+                case "SZA":
+                    {
+                        int i = Convert.ToInt32(InstrumentID.Substring(0, 2));
+                        if (i < 10)
+                        {
+                            securityType = FIXSecurityType.CommonStock;
+                        }
+                        else if (i < 15)
+                        {
+                            securityType = FIXSecurityType.USTreasuryBond;
+                        }
+                        else if (i < 20)
+                        {
+                            securityType = FIXSecurityType.ExchangeTradedFund;
+                        }
+                        else if (i < 30)
+                        {
+                            securityType = FIXSecurityType.CommonStock;
+                        }
+                        else if (i < 39)
+                        {
+                            securityType = FIXSecurityType.CommonStock;
+                        }
+                        else if (i == 39)
+                        {
+                            securityType = FIXSecurityType.Index;
+                        }
+                        else
+                        {
+                            securityType = FIXSecurityType.NoSecurityType;
+                        }
+                    }
                     break;
             }
             return securityType;

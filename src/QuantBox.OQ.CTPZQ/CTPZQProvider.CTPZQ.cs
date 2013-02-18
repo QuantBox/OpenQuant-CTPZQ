@@ -33,6 +33,7 @@ namespace QuantBox.OQ.CTPZQ
         private fnOnRspQryInvestorPosition          _fnOnRspQryInvestorPosition_Holder;
         private fnOnRspQryTradingAccount            _fnOnRspQryTradingAccount_Holder;
         private fnOnRtnDepthMarketData              _fnOnRtnDepthMarketData_Holder;
+        private fnOnRtnInstrumentStatus             _fnOnRtnInstrumentStatus_Holder;
         private fnOnRtnOrder                        _fnOnRtnOrder_Holder;
         private fnOnRtnTrade                        _fnOnRtnTrade_Holder;
 
@@ -53,6 +54,7 @@ namespace QuantBox.OQ.CTPZQ
             _fnOnRspQryInvestorPosition_Holder          = OnRspQryInvestorPosition;
             _fnOnRspQryTradingAccount_Holder            = OnRspQryTradingAccount;
             _fnOnRtnDepthMarketData_Holder              = OnRtnDepthMarketData;
+            _fnOnRtnInstrumentStatus_Holder             = OnRtnInstrumentStatus;
             _fnOnRtnOrder_Holder                        = OnRtnOrder;
             _fnOnRtnTrade_Holder                        = OnRtnTrade;
         }
@@ -324,6 +326,7 @@ namespace QuantBox.OQ.CTPZQ
                     //TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
                     TraderApi.CTP_RegOnRspQryInvestorPosition(m_pMsgQueue, _fnOnRspQryInvestorPosition_Holder);
                     TraderApi.CTP_RegOnRspQryTradingAccount(m_pMsgQueue, _fnOnRspQryTradingAccount_Holder);
+                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pMsgQueue, _fnOnRtnInstrumentStatus_Holder);
                     TraderApi.CTP_RegOnRtnOrder(m_pMsgQueue, _fnOnRtnOrder_Holder);
                     TraderApi.CTP_RegOnRtnTrade(m_pMsgQueue, _fnOnRtnTrade_Holder);
                     TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
@@ -545,6 +548,13 @@ namespace QuantBox.OQ.CTPZQ
                 if (isConnected)//如果以前连成功，表示密码没有错，只是初始化失败，可以重试
                 {
                     tdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+
+                    if (7 == pRspInfo.ErrorID//综合交易平台：还没有初始化
+                        || 8 == pRspInfo.ErrorID)//综合交易平台：前置不活跃
+                    {
+                        Disconnect_TD();
+                        Connect_TD();
+                    }
                 }
                 else
                 {
@@ -648,14 +658,14 @@ namespace QuantBox.OQ.CTPZQ
 
             if (record.QuoteRequested)
             {
-                if (
-                DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
-                && DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
-                && DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
-                && DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
-                )
-                { }
-                else
+                //if (
+                //DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
+                //&& DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
+                //&& DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
+                //&& DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
+                //)
+                //{ }
+                //else
                 {
                     Quote quote = new Quote(_dateTime,
                         pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
@@ -1370,6 +1380,18 @@ namespace QuantBox.OQ.CTPZQ
         {
             tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspError:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
             EmitError(nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+        }
+        #endregion
+
+        #region 交易所状态
+        private void OnRtnInstrumentStatus(IntPtr pTraderApi, ref CZQThostFtdcInstrumentStatusField pInstrumentStatus)
+        {
+            tdlog.Info("{0},{1},{2},{3}",
+                pInstrumentStatus.ExchangeID, pInstrumentStatus.InstrumentID,
+                pInstrumentStatus.InstrumentStatus, pInstrumentStatus.EnterReason);
+
+            //通知单例
+            CTPZQAPI.GetInstance().FireOnRtnInstrumentStatus(pInstrumentStatus);
         }
         #endregion
     }
