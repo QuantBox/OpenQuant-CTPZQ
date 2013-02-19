@@ -55,7 +55,19 @@ namespace QuantBox.OQ.CTPZQ
         {
             if (NewBar != null)
             {
-                NewBar(this, new BarEventArgs(args.Bar, args.Instrument, this));
+                Bar bar = args.Bar;
+                if (null != MarketDataFilter)
+                {
+                    Bar b = MarketDataFilter.FilterBar(bar, args.Instrument.Symbol);
+                    if (null != b)
+                    {
+                        NewBar(this, new BarEventArgs(b, args.Instrument, this));
+                    }
+                }
+                else
+                {
+                    NewBar(this, new BarEventArgs(bar, args.Instrument, this));
+                }
             }
         }
 
@@ -63,7 +75,19 @@ namespace QuantBox.OQ.CTPZQ
         {
             if (NewBarOpen != null)
             {
-                NewBarOpen(this, new BarEventArgs(args.Bar, args.Instrument, this));
+                Bar bar = args.Bar;
+                if (null != MarketDataFilter)
+                {
+                    Bar b = MarketDataFilter.FilterBarOpen(bar, args.Instrument.Symbol);
+                    if (null != b)
+                    {
+                        NewBarOpen(this, new BarEventArgs(b, args.Instrument, this));
+                    }
+                }
+                else
+                {
+                    NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
+                }
             }
         }
 
