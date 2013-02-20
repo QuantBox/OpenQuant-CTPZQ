@@ -889,9 +889,6 @@ namespace QuantBox.OQ.CTPZQ
                     out YdPosition, out TodayPosition,
                     out nLongFrozen, out nShortFrozen);
 
-            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6},LongFrozen:{7},ShortFrozen:{8}",
-                order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition,
-                nLongFrozen, nShortFrozen);
 
             List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
             SOrderSplitItem orderSplitItem;
@@ -937,6 +934,10 @@ namespace QuantBox.OQ.CTPZQ
             //bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
 
             string strPrice = string.Format("{0}", price);
+
+            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6},LongFrozen:{7},ShortFrozen:{8}",
+                order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition,
+                nLongFrozen, nShortFrozen);
 
             foreach (SOrderSplitItem it in OrderSplitList)
             {
