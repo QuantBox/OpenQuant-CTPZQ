@@ -20,14 +20,14 @@ namespace QuantBox.OQ.CTPZQ
 
         private bool disposed;
 
-        private static readonly Logger mdlog = LogManager.GetLogger("SM");
-        private static readonly Logger tdlog = LogManager.GetLogger("ST");
+        private static readonly Logger mdlog = LogManager.GetLogger("CTPZQ.M");
+        private static readonly Logger tdlog = LogManager.GetLogger("CTPZQ.T");
 
         public CTPZQProvider()
         {
             try
             {
-                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/CTPZQ.nlog");
+                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/QuantBox.nlog");
             }
             catch (Exception ex)
             {
