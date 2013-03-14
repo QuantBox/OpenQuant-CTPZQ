@@ -91,6 +91,7 @@ namespace QuantBox.OQ.CTPZQ
         private Dictionary<string, CZQThostFtdcDepthMarketDataField> _dictDepthMarketData = new Dictionary<string, CZQThostFtdcDepthMarketDataField>();
         //记录合约列表,从实盘合约名到对象的映射
         private Dictionary<string, CZQThostFtdcInstrumentField> _dictInstruments = new Dictionary<string, CZQThostFtdcInstrumentField>();
+        private Dictionary<string, string> _dictInstruments2 = new Dictionary<string, string>();
         //记录手续费率,从实盘合约名到对象的映射
         private Dictionary<string, CZQThostFtdcInstrumentCommissionRateField> _dictCommissionRate = new Dictionary<string, CZQThostFtdcInstrumentCommissionRateField>();
         //记录保证金率,从实盘合约名到对象的映射
@@ -114,6 +115,7 @@ namespace QuantBox.OQ.CTPZQ
             _dbInMemInvestorPosition.Clear();
             _dictDepthMarketData.Clear();
             _dictInstruments.Clear();
+            _dictInstruments2.Clear();
             _dictCommissionRate.Clear();
             //_dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
@@ -1278,6 +1280,9 @@ namespace QuantBox.OQ.CTPZQ
                 {
                     string symbol = GetYahooSymbol(pInstrument.InstrumentID,pInstrument.ExchangeID);
                     _dictInstruments[symbol] = pInstrument;
+
+                    // 行情中可能没有交易所信息，这个容器用于容错处理
+                    _dictInstruments2[pInstrument.InstrumentID] = symbol;
                 }
                 
                 if (bIsLast)

@@ -286,7 +286,21 @@ namespace QuantBox.OQ.CTPZQ
 
         private string GetYahooSymbol(string InstrumentID,string ExchangeID)
         {
-            return string.Format("{0}.{1}", InstrumentID, ExchangeID.Substring(0, 2));
+            if (ExchangeID.Length >= 2)
+            {
+                return string.Format("{0}.{1}", InstrumentID, ExchangeID.Substring(0, 2));
+            }
+            else
+            {
+                // 没有交易所信息时的容错处理
+                string altSymbol;
+                if (_dictInstruments2.TryGetValue(InstrumentID, out altSymbol))
+                {
+                    return altSymbol;
+                }
+
+                return string.Format("{0}.{1}", InstrumentID, ExchangeID);
+            }
         }
 
         private string GetApiSymbol(string Symbol)
