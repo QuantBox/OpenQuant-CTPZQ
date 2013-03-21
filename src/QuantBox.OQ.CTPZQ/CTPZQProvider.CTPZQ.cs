@@ -19,44 +19,44 @@ namespace QuantBox.OQ.CTPZQ
 {
     partial class CTPZQProvider
     {
-        private fnOnConnect                         _fnOnConnect_Holder;
-        private fnOnDisconnect                      _fnOnDisconnect_Holder;
-        private fnOnErrRtnOrderAction               _fnOnErrRtnOrderAction_Holder;
-        private fnOnErrRtnOrderInsert               _fnOnErrRtnOrderInsert_Holder;
-        private fnOnRspError                        _fnOnRspError_Holder;
-        private fnOnRspOrderAction                  _fnOnRspOrderAction_Holder;
-        private fnOnRspOrderInsert                  _fnOnRspOrderInsert_Holder;
-        private fnOnRspQryDepthMarketData           _fnOnRspQryDepthMarketData_Holder;
-        private fnOnRspQryInstrument                _fnOnRspQryInstrument_Holder;
-        private fnOnRspQryInstrumentCommissionRate  _fnOnRspQryInstrumentCommissionRate_Holder;
+        private fnOnConnect _fnOnConnect_Holder;
+        private fnOnDisconnect _fnOnDisconnect_Holder;
+        private fnOnErrRtnOrderAction _fnOnErrRtnOrderAction_Holder;
+        private fnOnErrRtnOrderInsert _fnOnErrRtnOrderInsert_Holder;
+        private fnOnRspError _fnOnRspError_Holder;
+        private fnOnRspOrderAction _fnOnRspOrderAction_Holder;
+        private fnOnRspOrderInsert _fnOnRspOrderInsert_Holder;
+        private fnOnRspQryDepthMarketData _fnOnRspQryDepthMarketData_Holder;
+        private fnOnRspQryInstrument _fnOnRspQryInstrument_Holder;
+        private fnOnRspQryInstrumentCommissionRate _fnOnRspQryInstrumentCommissionRate_Holder;
         //private fnOnRspQryInstrumentMarginRate      _fnOnRspQryInstrumentMarginRate_Holder;
-        private fnOnRspQryInvestorPosition          _fnOnRspQryInvestorPosition_Holder;
-        private fnOnRspQryTradingAccount            _fnOnRspQryTradingAccount_Holder;
-        private fnOnRtnDepthMarketData              _fnOnRtnDepthMarketData_Holder;
-        private fnOnRtnInstrumentStatus             _fnOnRtnInstrumentStatus_Holder;
-        private fnOnRtnOrder                        _fnOnRtnOrder_Holder;
-        private fnOnRtnTrade                        _fnOnRtnTrade_Holder;
+        private fnOnRspQryInvestorPosition _fnOnRspQryInvestorPosition_Holder;
+        private fnOnRspQryTradingAccount _fnOnRspQryTradingAccount_Holder;
+        private fnOnRtnDepthMarketData _fnOnRtnDepthMarketData_Holder;
+        private fnOnRtnInstrumentStatus _fnOnRtnInstrumentStatus_Holder;
+        private fnOnRtnOrder _fnOnRtnOrder_Holder;
+        private fnOnRtnTrade _fnOnRtnTrade_Holder;
 
         private void InitCallbacks()
         {
             //由于回调函数可能被GC回收，所以用成员变量将回调函数保存下来
-            _fnOnConnect_Holder                         = OnConnect;
-            _fnOnDisconnect_Holder                      = OnDisconnect;
-            _fnOnErrRtnOrderAction_Holder               = OnErrRtnOrderAction;
-            _fnOnErrRtnOrderInsert_Holder               = OnErrRtnOrderInsert;
-            _fnOnRspError_Holder                        = OnRspError;
-            _fnOnRspOrderAction_Holder                  = OnRspOrderAction;
-            _fnOnRspOrderInsert_Holder                  = OnRspOrderInsert;
-            _fnOnRspQryDepthMarketData_Holder           = OnRspQryDepthMarketData;
-            _fnOnRspQryInstrument_Holder                = OnRspQryInstrument;
-            _fnOnRspQryInstrumentCommissionRate_Holder  = OnRspQryInstrumentCommissionRate;
+            _fnOnConnect_Holder = OnConnect;
+            _fnOnDisconnect_Holder = OnDisconnect;
+            _fnOnErrRtnOrderAction_Holder = OnErrRtnOrderAction;
+            _fnOnErrRtnOrderInsert_Holder = OnErrRtnOrderInsert;
+            _fnOnRspError_Holder = OnRspError;
+            _fnOnRspOrderAction_Holder = OnRspOrderAction;
+            _fnOnRspOrderInsert_Holder = OnRspOrderInsert;
+            _fnOnRspQryDepthMarketData_Holder = OnRspQryDepthMarketData;
+            _fnOnRspQryInstrument_Holder = OnRspQryInstrument;
+            _fnOnRspQryInstrumentCommissionRate_Holder = OnRspQryInstrumentCommissionRate;
             //_fnOnRspQryInstrumentMarginRate_Holder      = OnRspQryInstrumentMarginRate;
-            _fnOnRspQryInvestorPosition_Holder          = OnRspQryInvestorPosition;
-            _fnOnRspQryTradingAccount_Holder            = OnRspQryTradingAccount;
-            _fnOnRtnDepthMarketData_Holder              = OnRtnDepthMarketData;
-            _fnOnRtnInstrumentStatus_Holder             = OnRtnInstrumentStatus;
-            _fnOnRtnOrder_Holder                        = OnRtnOrder;
-            _fnOnRtnTrade_Holder                        = OnRtnTrade;
+            _fnOnRspQryInvestorPosition_Holder = OnRspQryInvestorPosition;
+            _fnOnRspQryTradingAccount_Holder = OnRspQryTradingAccount;
+            _fnOnRtnDepthMarketData_Holder = OnRtnDepthMarketData;
+            _fnOnRtnInstrumentStatus_Holder = OnRtnInstrumentStatus;
+            _fnOnRtnOrder_Holder = OnRtnOrder;
+            _fnOnRtnTrade_Holder = OnRtnTrade;
         }
 
         private IntPtr m_pMsgQueue = IntPtr.Zero;   //消息队列指针
@@ -165,7 +165,7 @@ namespace QuantBox.OQ.CTPZQ
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, "");
-            }           
+            }
         }
 
         void timerAccount_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -215,13 +215,13 @@ namespace QuantBox.OQ.CTPZQ
                     break;
                 }
 
-                if (_bWantTdConnect &&0 == server.Trading.Count())
+                if (_bWantTdConnect && 0 == server.Trading.Count())
                 {
                     MessageBox.Show("交易服务器地址不全");
                     break;
                 }
 
-                if (_bWantMdConnect &&0 == server.MarketData.Count())
+                if (_bWantMdConnect && 0 == server.MarketData.Count())
                 {
                     MessageBox.Show("行情服务器信息不全");
                     break;
@@ -248,7 +248,7 @@ namespace QuantBox.OQ.CTPZQ
             //新建目录
             _newTempPath = ApiTempPath + Path.DirectorySeparatorChar + server.BrokerID + Path.DirectorySeparatorChar + account.InvestorId;
             Directory.CreateDirectory(_newTempPath);
-            
+
             ChangeStatus(ProviderStatus.Connecting);
             //如果前面一次连接一直连不上，新改地址后也会没响应，所以先删除
             Disconnect_MD();
@@ -413,7 +413,7 @@ namespace QuantBox.OQ.CTPZQ
         }
         #endregion
 
-        private void UpdateLocalTime(SetTimeMode _SetLocalTimeMode,CZQThostFtdcRspUserLoginField pRspUserLogin)
+        private void UpdateLocalTime(SetTimeMode _SetLocalTimeMode, CZQThostFtdcRspUserLoginField pRspUserLogin)
         {
             string strNewTime;
             switch (_SetLocalTimeMode)
@@ -501,9 +501,9 @@ namespace QuantBox.OQ.CTPZQ
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
 
                     UpdateLocalTime(SetLocalTimeMode, pRspUserLogin);
-                //}
-                //else if (ConnectionStatus.E_confirmed == result)
-                //{
+                    //}
+                    //else if (ConnectionStatus.E_confirmed == result)
+                    //{
                     _bTdConnected = true;
                     //请求查询资金
                     TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
@@ -612,7 +612,7 @@ namespace QuantBox.OQ.CTPZQ
 
                     _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _dateTime = Clock.Now;
                 }
@@ -691,7 +691,7 @@ namespace QuantBox.OQ.CTPZQ
                 }
             }
 
-            if(record.MarketDepthRequested)
+            if (record.MarketDepthRequested)
             {
                 EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Ask, pDepthMarketData.AskPrice1, pDepthMarketData.AskVolume1);
                 EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Bid, pDepthMarketData.BidPrice1, pDepthMarketData.BidVolume1);
@@ -710,19 +710,19 @@ namespace QuantBox.OQ.CTPZQ
             }
         }
 
-        private void EmitNewMarketDepth(Instrument instrument, DateTime datatime,int position,MDSide ask,double price,int size)
+        private void EmitNewMarketDepth(Instrument instrument, DateTime datatime, int position, MDSide ask, double price, int size)
         {
             MDOperation insert = MDOperation.Update;
-            if(MDSide.Ask == ask)
+            if (MDSide.Ask == ask)
             {
-                if(position>=instrument.OrderBook.Ask.Count)
+                if (position >= instrument.OrderBook.Ask.Count)
                 {
                     insert = MDOperation.Insert;
                 }
             }
             else
             {
-                if(position>=instrument.OrderBook.Bid.Count)
+                if (position >= instrument.OrderBook.Bid.Count)
                 {
                     insert = MDOperation.Insert;
                 }
@@ -761,7 +761,7 @@ namespace QuantBox.OQ.CTPZQ
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryDepthMarketData:" + pRspInfo.ErrorMsg);
             }
         }
-    
+
         #endregion
 
         #region 撤单
@@ -799,7 +799,7 @@ namespace QuantBox.OQ.CTPZQ
         };
 
         private void Send(NewOrderSingle order)
-        {            
+        {
             if (!_bTdConnected)
             {
                 EmitError(-1, -1, "交易服务器没有连接，无法报单");
@@ -821,7 +821,7 @@ namespace QuantBox.OQ.CTPZQ
                 _altSymbol = _Instrument.InstrumentID;
                 altExchange = _Instrument.ExchangeID;
             }
-            
+
             //最小变动价格修正
             double price = order.Price;
 
@@ -1019,6 +1019,7 @@ namespace QuantBox.OQ.CTPZQ
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
                 order.Text = string.Format("{0}|{1}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pOrder.StatusMsg);
+                order.OrderID = pOrder.OrderSysID;
 
                 //找到对应的报单回应
                 Dictionary<string, CZQThostFtdcOrderField> _Ref2Action;
@@ -1048,9 +1049,13 @@ namespace QuantBox.OQ.CTPZQ
                         case TZQThostFtdcOrderStatusType.NoTradeQueueing:
                             if (0 == _Ref2Action.Count())
                             {
+                                _Ref2Action[strKey] = pOrder;
                                 EmitAccepted(order);
                             }
-                            _Ref2Action[strKey] = pOrder;
+                            else
+                            {
+                                _Ref2Action[strKey] = pOrder;
+                            }
                             break;
                         case TZQThostFtdcOrderStatusType.NoTradeNotQueueing:
                             //已经是最后状态，不能用于撤单了
@@ -1085,9 +1090,13 @@ namespace QuantBox.OQ.CTPZQ
                                     //新单，新加入记录以便撤单
                                     if (0 == _Ref2Action.Count())
                                     {
+                                        _Ref2Action[strKey] = pOrder;
                                         EmitAccepted(order);
                                     }
-                                    _Ref2Action[strKey] = pOrder;
+                                    else
+                                    {
+                                        _Ref2Action[strKey] = pOrder;
+                                    }
                                     break;
                             }
                             break;
@@ -1198,7 +1207,7 @@ namespace QuantBox.OQ.CTPZQ
                         pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
-                EmitCancelReject(order,order.Text);
+                EmitCancelReject(order, order.Text);
             }
         }
         #endregion
@@ -1278,13 +1287,13 @@ namespace QuantBox.OQ.CTPZQ
                 //比较无语，测试平台上会显示很多无效数据，有关期货的还会把正确的数据给覆盖，所以临时这样处理
                 if (pInstrument.ProductClass != TZQThostFtdcProductClassType.Futures)
                 {
-                    string symbol = GetYahooSymbol(pInstrument.InstrumentID,pInstrument.ExchangeID);
+                    string symbol = GetYahooSymbol(pInstrument.InstrumentID, pInstrument.ExchangeID);
                     _dictInstruments[symbol] = pInstrument;
 
                     // 行情中可能没有交易所信息，这个容器用于容错处理
                     _dictInstruments2[pInstrument.InstrumentID] = symbol;
                 }
-                
+
                 if (bIsLast)
                 {
                     tdlog.Info("合约列表已经接收完成,共{0}条", _dictInstruments.Count);
