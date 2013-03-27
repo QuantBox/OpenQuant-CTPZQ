@@ -120,6 +120,7 @@ namespace QuantBox.OQ.CTPZQ
             _dictCommissionRate.Clear();
             //_dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
+            nGetBrokerInfoCount = 0;
 
             _yyyy = 0;
             _MM = 0;
