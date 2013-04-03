@@ -8,7 +8,7 @@ using SmartQuant.Providers;
 
 namespace QuantBox.OQ.CTPZQ
 {
-    public partial class CTPZQProvider:IMarketDataProvider
+    public partial class CTPZQProvider : IMarketDataProvider
     {
         private IBarFactory factory;
 
@@ -157,7 +157,7 @@ namespace QuantBox.OQ.CTPZQ
                         record.Instrument = inst;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
-                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol,_altSymbol,altExchange);
+                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, _altSymbol, altExchange);
                         MdApi.MD_Subscribe(m_pMdApi, _altSymbol, altExchange);
 
                         if (_bTdConnected)

@@ -34,6 +34,7 @@ namespace QuantBox.OQ.CTPZQ
                 tdlog.Warn(ex.Message);
             }
 
+            timerConnect.Elapsed += timerConnect_Elapsed;
             timerDisconnect.Elapsed += timerDisconnect_Elapsed;
             timerAccount.Elapsed += timerAccount_Elapsed;
             timerPonstion.Elapsed += timerPonstion_Elapsed;
@@ -123,6 +124,7 @@ namespace QuantBox.OQ.CTPZQ
 
             SettingsChanged();
 
+            timerConnect.Elapsed -= timerConnect_Elapsed;
             timerDisconnect.Elapsed -= timerDisconnect_Elapsed;
             timerAccount.Elapsed -= timerAccount_Elapsed;
             timerPonstion.Elapsed -= timerPonstion_Elapsed;

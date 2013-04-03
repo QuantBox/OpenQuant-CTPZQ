@@ -22,6 +22,7 @@ namespace QuantBox.OQ.CTPZQ
         private const string CATEGORY_INFO = "Information";
         private const string CATEGORY_NETWORK = "Settings - Network";
         private const string CATEGORY_STATUS = "Status";
+        private const string CATEGORY_OTHER = "Settings - Other";
 
         //交易所常量定义
         private enum ExchangID
@@ -141,6 +142,16 @@ namespace QuantBox.OQ.CTPZQ
         [Description("在最新价上调整N跳来模拟市价，超过涨跌停价按涨跌停价报")]
         [DefaultValue(10)]
         public int LastPricePlusNTicks
+        {
+            get;
+            set;
+        }
+
+        [Category(CATEGORY_OTHER)]
+        [Description("True - 产生OnRtnDepthMarketData事件\nFalse - 不产生OnRtnDepthMarketData事件")]
+        [DefaultValue(false)]
+        //[Browsable(false)]
+        public bool EmitOnRtnDepthMarketData
         {
             get;
             set;

@@ -127,7 +127,7 @@ namespace QuantBox.OQ.CTPZQ
             _dd = 0;
         }
 
-        private void ChangeDay()
+        private void ChangeTradingDay()
         {
             //只在每天的1点以内更新一次
             if (_dd != DateTime.Now.Day
@@ -147,9 +147,46 @@ namespace QuantBox.OQ.CTPZQ
         #endregion
 
         #region 定时器
+        private System.Timers.Timer timerConnect = new System.Timers.Timer(1 * 60 * 1000);
         private System.Timers.Timer timerDisconnect = new System.Timers.Timer(20 * 1000);
         private System.Timers.Timer timerAccount = new System.Timers.Timer(3 * 60 * 1000);
         private System.Timers.Timer timerPonstion = new System.Timers.Timer(5 * 60 * 1000);
+
+        void timerConnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //网络问题从来没有连上，超时直接跳出
+            if (!isConnected)
+                return;
+
+            // 换交易日了，更新部分数据
+            ChangeTradingDay();
+
+            DateTime dt = DateTime.Now;
+            int nTime = dt.Hour * 100 + dt.Minute;
+            // 9点到15点15是交易时间
+            bool bTrading = false;
+            if (830 <= nTime && nTime <= 1530)
+            {
+                bTrading = true;
+            }
+
+            if (!bTrading)
+                return;
+
+            // 交易时间断线，由C#层来销毁，然后重连
+            if (_bWantMdConnect && !_bMdConnected)
+            {
+                mdlog.Info("断开->重连");
+                Disconnect_MD();
+                Connect_MD();
+            }
+            if (_bWantTdConnect && !_bTdConnected)
+            {
+                tdlog.Info("断开->重连");
+                Disconnect_TD();
+                Connect_TD();
+            }
+        }
 
         void timerDisconnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -163,7 +200,6 @@ namespace QuantBox.OQ.CTPZQ
 
         void timerPonstion_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, "");
@@ -172,7 +208,6 @@ namespace QuantBox.OQ.CTPZQ
 
         void timerAccount_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
@@ -259,8 +294,6 @@ namespace QuantBox.OQ.CTPZQ
             if (_bWantMdConnect || _bWantTdConnect)
             {
                 timerDisconnect.Enabled = true;
-                timerAccount.Enabled = true;
-                timerPonstion.Enabled = true;
                 Connect_MsgQueue();
             }
             if (_bWantMdConnect)
@@ -533,6 +566,9 @@ namespace QuantBox.OQ.CTPZQ
                     //请求查询合约
                     _dictInstruments.Clear();
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
+
+                    timerAccount.Enabled = true;
+                    timerPonstion.Enabled = true;
                 }
 
                 tdlog.Info("{0},{1}", result, pRspUserLogin.LoginTime);
@@ -544,7 +580,8 @@ namespace QuantBox.OQ.CTPZQ
                 || (!_bWantTdConnect && _bMdConnected)//只用分析行情连上
                 )
             {
-                timerDisconnect.Enabled = false;//都连接上了，用不着定时断开了
+                timerConnect.Enabled = true;
+                timerDisconnect.Enabled = false;//都连接上了，用不着定时断
                 ChangeStatus(ProviderStatus.LoggedIn);
                 isConnected = true;
                 EmitConnectedEvent();
@@ -555,6 +592,7 @@ namespace QuantBox.OQ.CTPZQ
         {
             if (m_pMdApi == pApi)//行情
             {
+                _bMdConnected = false;
                 if (isConnected)
                 {
                     mdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
@@ -566,6 +604,7 @@ namespace QuantBox.OQ.CTPZQ
             }
             else if (m_pTdApi == pApi)//交易
             {
+                _bTdConnected = false;
                 if (isConnected)//如果以前连成功，表示密码没有错，只是初始化失败，可以重试
                 {
                     tdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
@@ -726,6 +765,12 @@ namespace QuantBox.OQ.CTPZQ
 
                 EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
                 EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+            }
+
+            // 直接回报CTP的行情信息
+            if (EmitOnRtnDepthMarketData)
+            {
+                CTPZQAPI.GetInstance().FireOnRtnDepthMarketData(pDepthMarketData);
             }
         }
 
