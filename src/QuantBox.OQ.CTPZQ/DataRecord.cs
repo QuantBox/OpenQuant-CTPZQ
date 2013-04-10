@@ -8,6 +8,8 @@ namespace QuantBox.OQ.CTPZQ
 {
     class DataRecord
     {
+        public string Symbol;
+        public string Exchange;
         public Instrument Instrument;
         public bool TradeRequested;
         public bool QuoteRequested;

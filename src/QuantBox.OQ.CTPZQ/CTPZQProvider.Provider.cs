@@ -160,7 +160,6 @@ namespace QuantBox.OQ.CTPZQ
 
         private void EmitConnectedEvent()
         {
-            isConnected = true;
             if (Connected != null)
             {
                 Connected(this, EventArgs.Empty);
@@ -169,7 +168,6 @@ namespace QuantBox.OQ.CTPZQ
 
         private void EmitDisconnectedEvent()
         {
-            isConnected = false;
             if (Disconnected != null)
             {
                 Disconnected(this, EventArgs.Empty);

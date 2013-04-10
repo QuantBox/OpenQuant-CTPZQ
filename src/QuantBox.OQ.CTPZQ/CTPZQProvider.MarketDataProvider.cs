@@ -155,10 +155,12 @@ namespace QuantBox.OQ.CTPZQ
                     {
                         record = new DataRecord();
                         record.Instrument = inst;
+                        record.Symbol = _altSymbol;
+                        record.Exchange = altExchange;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
-                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, _altSymbol, altExchange);
-                        MdApi.MD_Subscribe(m_pMdApi, _altSymbol, altExchange);
+                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
+                        MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
 
                         if (_bTdConnected)
                         {
@@ -197,14 +199,6 @@ namespace QuantBox.OQ.CTPZQ
 
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
-                    string altExchange = inst.GetSecurityExchange(this.Name);
-                    string _altSymbol = GetApiSymbol(altSymbol);
-                    CZQThostFtdcInstrumentField _Instrument;
-                    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
-                    {
-                        _altSymbol = _Instrument.InstrumentID;
-                        altExchange = _Instrument.ExchangeID;
-                    }
 
                     DataRecord record;
                     if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
@@ -223,8 +217,8 @@ namespace QuantBox.OQ.CTPZQ
                     {
                         _dictDepthMarketData.Remove(altSymbol);
                         _dictAltSymbol2Instrument.Remove(altSymbol);
-                        mdlog.Info("取消合约 {0} {1} {2}", altSymbol, _altSymbol, altExchange);
-                        MdApi.MD_Unsubscribe(m_pMdApi, _altSymbol, altExchange);
+                        mdlog.Info("取消合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
+                        MdApi.MD_Unsubscribe(m_pMdApi, record.Symbol, record.Exchange);
                     }
                 }
             }
