@@ -126,7 +126,34 @@ namespace QuantBox.OQ.CTPZQ
             _dd = 0;
         }
 
-        private void ChangeTradingDay()
+        private void ChangeTradingDay(string tradingDay)
+        {
+            // 不用每次都比
+            DateTime dt = DateTime.Now;
+            int nTime = dt.Hour * 100 + dt.Minute;
+            // 考虑到时间误差，给10分钟的切换时间
+            if (2355 <= nTime || nTime <= 5)
+            {
+                // 行情时间切换
+                // 在这个时间段内都使用传回来的时间，
+                // 因为有可能不同交易所时间有误差，有的到第二天了，有些还没到
+                try
+                {
+                    int _yyyyMMdd = int.Parse(tradingDay);
+                    _yyyy = _yyyyMMdd / 10000;
+                    _MM = (_yyyyMMdd % 10000) / 100;
+                    _dd = _yyyyMMdd % 100;
+                }
+                catch (Exception ex)
+                {
+                    _yyyy = dt.Year;
+                    _MM = dt.Month;
+                    _dd = dt.Day;
+                }
+            }
+        }
+
+        private void ChangeActionDay()
         {
             //只在每天的1点以内更新一次
             if (_dd != DateTime.Now.Day
@@ -158,7 +185,7 @@ namespace QuantBox.OQ.CTPZQ
                 return;
 
             // 换交易日了，更新部分数据
-            ChangeTradingDay();
+            ChangeActionDay();
 
             DateTime dt = DateTime.Now;
             int nTime = dt.Hour * 100 + dt.Minute;
@@ -495,20 +522,27 @@ namespace QuantBox.OQ.CTPZQ
         #region 连接状态回调
         private void OnConnect(IntPtr pApi, ref CZQThostFtdcRspUserLoginField pRspUserLogin, ConnectionStatus result)
         {
+            //用于行情记算时简化时间解码
+            try
+            {
+                int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
+                _yyyy = _yyyyMMdd / 10000;
+                _MM = (_yyyyMMdd % 10000) / 100;
+                _dd = _yyyyMMdd % 100;
+            }
+            catch (Exception ex)
+            {
+                _yyyy = DateTime.Now.Year;
+                _MM = DateTime.Now.Month;
+                _dd = DateTime.Now.Day;
+            }
+
             if (m_pMdApi == pApi)//行情
             {
                 _bMdConnected = false;
                 if (ConnectionStatus.E_logined == result)
                 {
                     _bMdConnected = true;
-
-                    //只登录行情时得得更新行情时间，但行情却可以隔夜不断，所以要定时更新
-                    if (!_bWantTdConnect)
-                    {
-                        _yyyy = DateTime.Now.Year;
-                        _MM = DateTime.Now.Month;
-                        _dd = DateTime.Now.Day;
-                    }
 
                     mdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
@@ -533,12 +567,6 @@ namespace QuantBox.OQ.CTPZQ
                 if (ConnectionStatus.E_logined == result)
                 {
                     _RspUserLogin = pRspUserLogin;
-
-                    //用于行情记算时简化时间解码
-                    int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
-                    _yyyy = _yyyyMMdd / 10000;
-                    _MM = (_yyyyMMdd % 10000) / 100;
-                    _dd = _yyyyMMdd % 100;
 
                     tdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
@@ -656,6 +684,9 @@ namespace QuantBox.OQ.CTPZQ
                 //直接按HH:mm:ss来解析，测试过这种方法目前是效率比较高的方法
                 try
                 {
+                    // 只有使用交易所行情时才需要处理跨天的问题
+                    ChangeTradingDay(pDepthMarketData.TradingDay);
+
                     int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
                     int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
                     int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
