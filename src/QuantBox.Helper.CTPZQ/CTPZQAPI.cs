@@ -204,5 +204,14 @@ namespace QuantBox.Helper.CTPZQ
             }
         }
         #endregion
+
+        #region OnStrategyStart
+        public EventHandler OnLive;
+        public void EmitOnLive()
+        {
+            if (OnLive != null)
+                OnLive(null, EventArgs.Empty);
+        }
+        #endregion
     }
 }

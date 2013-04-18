@@ -74,6 +74,9 @@
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
     <Compile Include="BrokerItem.cs" />
+    <Compile Include="CTPZQProvider.CTPZQ.Order.cs" />
+    <Compile Include="CTPZQProvider.CTPZQ.Connection.cs" />
+    <Compile Include="CTPZQProvider.CTPZQ.MarketData.cs" />
     <Compile Include="DataRecord.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
