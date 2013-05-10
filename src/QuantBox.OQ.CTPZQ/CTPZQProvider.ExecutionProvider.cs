@@ -26,15 +26,15 @@ namespace QuantBox.OQ.CTPZQ
             {
                 if (_bTdConnected)
                 {
-                    tdlog.Info("GetBrokerInfo");
+                    //tdlog.Info("GetBrokerInfo");
                 }
                 else
                 {
-                    if (nGetBrokerInfoCount < 5)
-                    {
-                        tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
-                        ++nGetBrokerInfoCount;
-                    }
+                    //if (nGetBrokerInfoCount < 5)
+                    //{
+                    //    tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
+                    //    ++nGetBrokerInfoCount;
+                    //}
                     return null;
                 }  
 
@@ -144,11 +144,11 @@ namespace QuantBox.OQ.CTPZQ
             }
         }
 
-        private void EmitOrderCancelReject()
+        private void EmitOrderCancelReject(OrderCancelReject reject)
         {
             if (OrderCancelReject != null)
             {
-                OrderCancelReject(this, new OrderCancelRejectEventArgs(null));
+                OrderCancelReject(this, new OrderCancelRejectEventArgs(reject));
             }
         }
 
@@ -222,9 +222,21 @@ namespace QuantBox.OQ.CTPZQ
             EmitExecutionReport(order, OrdStatus.Cancelled);
         }
 
-        protected void EmitCancelReject(SingleOrder order, string message)
+        protected void EmitCancelReject(SingleOrder order, OrdStatus status, string message)
         {
-            //EmitCancelReject(order, message);
+            OrderCancelReject reject = new OrderCancelReject
+            {
+                TransactTime = Clock.Now,
+                ClOrdID = order.ClOrdID,
+                OrigClOrdID = order.ClOrdID,
+                OrderID = order.OrderID,
+
+                CxlRejReason = CxlRejReason.BrokerOption,
+                CxlRejResponseTo = CxlRejResponseTo.CancelRequest,
+                OrdStatus = status
+            };
+
+            EmitOrderCancelReject(reject);
         }
 
         protected void EmitFilled(SingleOrder order, double price, int quantity)

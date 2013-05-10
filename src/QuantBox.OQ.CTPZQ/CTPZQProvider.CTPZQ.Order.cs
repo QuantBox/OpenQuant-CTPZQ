@@ -485,7 +485,7 @@ namespace QuantBox.OQ.CTPZQ
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitCancelReject(order, order.Text);
+                EmitCancelReject(order, order.OrdStatus, order.Text);
             }
         }
 
@@ -502,7 +502,7 @@ namespace QuantBox.OQ.CTPZQ
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitCancelReject(order, order.Text);
+                EmitCancelReject(order, order.OrdStatus, order.Text);
             }
         }
         #endregion

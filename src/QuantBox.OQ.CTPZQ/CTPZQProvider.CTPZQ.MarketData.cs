@@ -57,7 +57,7 @@ namespace QuantBox.OQ.CTPZQ
 
                     _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     _dateTime = Clock.Now;
                 }

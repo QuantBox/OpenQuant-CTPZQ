@@ -56,7 +56,7 @@ namespace QuantBox.OQ.CTPZQ
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     _yyyy = dt.Year;
                     _MM = dt.Month;
