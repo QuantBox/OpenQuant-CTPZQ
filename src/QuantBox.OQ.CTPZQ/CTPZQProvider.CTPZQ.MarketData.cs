@@ -49,7 +49,7 @@ namespace QuantBox.OQ.CTPZQ
                 try
                 {
                     // 只有使用交易所行情时才需要处理跨天的问题
-                    ChangeTradingDay(pDepthMarketData.TradingDay);
+                    ChangeActionDay(pDepthMarketData.TradingDay);
 
                     int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
                     int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
@@ -84,22 +84,15 @@ namespace QuantBox.OQ.CTPZQ
                         volume = pDepthMarketData.Volume;
                     }
 
-                    Trade trade = new Trade(_dateTime,
+                    // 使用新的类,保存更多信息
+                    CTPZQTrade trade = new CTPZQTrade(_dateTime,
                         pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
                         volume);
 
-                    if (null != MarketDataFilter)
-                    {
-                        Trade t = MarketDataFilter.FilterTrade(trade, instrument.Symbol);
-                        if (null != t)
-                        {
-                            EmitNewTradeEvent(instrument, t);
-                        }
-                    }
-                    else
-                    {
-                        EmitNewTradeEvent(instrument, trade);
-                    }
+                    // 记录深度数据
+                    trade.DepthMarketData = pDepthMarketData;
+
+                    EmitNewTradeEvent(instrument, trade);
                 }
             }
 
@@ -114,25 +107,16 @@ namespace QuantBox.OQ.CTPZQ
                 //{ }
                 //else
                 {
-                    Quote quote = new Quote(_dateTime,
+                    CTPZQQuote quote = new CTPZQQuote(_dateTime,
                         pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
                         pDepthMarketData.BidVolume1,
                         pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
                         pDepthMarketData.AskVolume1
                     );
 
-                    if (null != MarketDataFilter)
-                    {
-                        Quote q = MarketDataFilter.FilterQuote(quote, instrument.Symbol);
-                        if (null != q)
-                        {
-                            EmitNewQuoteEvent(instrument, q);
-                        }
-                    }
-                    else
-                    {
-                        EmitNewQuoteEvent(instrument, quote);
-                    }
+                    quote.DepthMarketData = pDepthMarketData;
+
+                    EmitNewQuoteEvent(instrument, quote);
                 }
             }
 

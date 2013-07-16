@@ -39,7 +39,7 @@ namespace QuantBox.OQ.CTPZQ
             _dd = 0;
         }
 
-        private void ChangeTradingDay(string tradingDay)
+        private void ChangeActionDay(string day)
         {
             // 不用每次都比
             DateTime dt = DateTime.Now;
@@ -52,7 +52,7 @@ namespace QuantBox.OQ.CTPZQ
                 // 因为有可能不同交易所时间有误差，有的到第二天了，有些还没到
                 try
                 {
-                    int _yyyyMMdd = int.Parse(tradingDay);
+                    int _yyyyMMdd = int.Parse(day);
                     _yyyy = _yyyyMMdd / 10000;
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
@@ -66,23 +66,14 @@ namespace QuantBox.OQ.CTPZQ
             }
         }
 
-        private void ChangeActionDay()
+        private void ChangeTradingDay()
         {
-            //只在每天的1点以内更新一次
-            if (_dd != DateTime.Now.Day
-                && DateTime.Now.Hour < 1)
-            {
-                //测试平台晚上会出现交易日为明天的情况，如果现在清空会导致有行情过来，但不显示在界面上
-                //所以修改行情接收部分总是更新
-                //_dictDepthMarketData.Clear();
-                _dictInstruments.Clear();
-                _dictCommissionRate.Clear();
-
-                _yyyy = DateTime.Now.Year;
-                _MM = DateTime.Now.Month;
-                _dd = DateTime.Now.Day;
-            }
+            // 换交易日，假设换交易日前肯定会登录一次，所以在登录的时候清理即可
+            //_dictInstruments.Clear();
+            //_dictCommissionRate.Clear();
+            //_dictMarginRate.Clear();
         }
+
         #endregion
 
         #region 定时器
@@ -98,7 +89,7 @@ namespace QuantBox.OQ.CTPZQ
                 return;
 
             // 换交易日了，更新部分数据
-            ChangeActionDay();
+            ChangeTradingDay();
 
             DateTime dt = DateTime.Now;
             int nTime = dt.Hour * 100 + dt.Minute;
@@ -496,11 +487,14 @@ namespace QuantBox.OQ.CTPZQ
                     TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
 
                     //请求查询全部持仓
+                    _dbInMemInvestorPosition.Clear();
                     TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
 
                     //请求查询合约
                     _dictInstruments.Clear();
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
+
+                    _dictCommissionRate.Clear();
 
                     timerAccount.Enabled = true;
                     timerPonstion.Enabled = true;
