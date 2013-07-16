@@ -31,7 +31,8 @@ namespace QuantBox.OQ.CTPZQ
             _dictCommissionRate.Clear();
             //_dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
-            nGetBrokerInfoCount = 0;
+            _PendingCancelFlags.Clear();
+
 
             _yyyy = 0;
             _MM = 0;
@@ -426,7 +427,7 @@ namespace QuantBox.OQ.CTPZQ
                     WinAPI.SetLocalTime(_newDateTime),
                     _newDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 tdlog.Warn("{0}不能解析成时间", strNewTime);
             }
@@ -437,14 +438,14 @@ namespace QuantBox.OQ.CTPZQ
         private void OnConnect(IntPtr pApi, ref CZQThostFtdcRspUserLoginField pRspUserLogin, ConnectionStatus result)
         {
             //用于行情记算时简化时间解码
-            try
-            {
-                int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
-                _yyyy = _yyyyMMdd / 10000;
-                _MM = (_yyyyMMdd % 10000) / 100;
-                _dd = _yyyyMMdd % 100;
-            }
-            catch (Exception ex)
+            //try
+            //{
+            //    int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
+            //    _yyyy = _yyyyMMdd / 10000;
+            //    _MM = (_yyyyMMdd % 10000) / 100;
+            //    _dd = _yyyyMMdd % 100;
+            //}
+            //catch (Exception)
             {
                 _yyyy = DateTime.Now.Year;
                 _MM = DateTime.Now.Month;

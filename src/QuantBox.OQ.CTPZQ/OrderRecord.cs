@@ -49,6 +49,10 @@ namespace QuantBox.OQ.CTPZQ
             {
                 return this.leavesQty;
             }
+            set
+            {
+                this.leavesQty = value;
+            }
         }
 
         public SingleOrder Order

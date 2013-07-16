@@ -20,6 +20,7 @@ namespace QuantBox.OQ.CTPZQ
     partial class CTPZQProvider
     {
         #region 撤单
+        private readonly Dictionary<SingleOrder, OrdStatus> _PendingCancelFlags = new Dictionary<SingleOrder, OrdStatus>();
         private void Cancel(SingleOrder order)
         {
             if (!_bTdConnected)
@@ -32,6 +33,9 @@ namespace QuantBox.OQ.CTPZQ
             Dictionary<string, CZQThostFtdcOrderField> _Ref2Action;
             if (_Orders4Cancel.TryGetValue(order, out _Ref2Action))
             {
+                // 标记下正在撤单
+                _PendingCancelFlags[order] = order.OrdStatus;
+
                 lock (_Ref2Action)
                 {
                     CZQThostFtdcOrderField __Order;
@@ -291,6 +295,15 @@ namespace QuantBox.OQ.CTPZQ
                     _Orders4Cancel[order] = _Ref2Action;
                 }
 
+                // 有对它进行过撤单操作，这地方是为了加正在撤单状态
+                OrdStatus status;
+                if (_PendingCancelFlags.TryGetValue(order, out status))
+                {
+                    // 记下当时的状态
+                    _PendingCancelFlags[order] = order.OrdStatus;
+                    EmitPendingCancel(order);
+                }
+
                 lock (_Ref2Action)
                 {
                     string strSysID = string.Format("{0}:{1}", pOrder.ExchangeID, pOrder.OrderSysID);
@@ -299,6 +312,7 @@ namespace QuantBox.OQ.CTPZQ
                     {
                         case TZQThostFtdcOrderStatusType.AllTraded:
                             //已经是最后状态，不能用于撤单了
+                            _PendingCancelFlags.Remove(order);
                             _Ref2Action.Remove(strKey);
                             break;
                         case TZQThostFtdcOrderStatusType.PartTradedQueueing:
@@ -307,6 +321,7 @@ namespace QuantBox.OQ.CTPZQ
                             break;
                         case TZQThostFtdcOrderStatusType.PartTradedNotQueueing:
                             //已经是最后状态，不能用于撤单了
+                            _PendingCancelFlags.Remove(order);
                             _Ref2Action.Remove(strKey);
                             break;
                         case TZQThostFtdcOrderStatusType.NoTradeQueueing:
@@ -325,10 +340,12 @@ namespace QuantBox.OQ.CTPZQ
                             break;
                         case TZQThostFtdcOrderStatusType.NoTradeNotQueueing:
                             //已经是最后状态，不能用于撤单了
+                            _PendingCancelFlags.Remove(order);
                             _Ref2Action.Remove(strKey);
                             break;
                         case TZQThostFtdcOrderStatusType.Canceled:
                             //已经是最后状态，不能用于撤单了
+                            _PendingCancelFlags.Remove(order);
                             _Ref2Action.Remove(strKey);
                             //分析此报单是否结束，如果结束分析整个Order是否结束
                             switch (pOrder.OrderSubmitStatus)
@@ -458,7 +475,7 @@ namespace QuantBox.OQ.CTPZQ
                 }
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
-                EmitFilled(order, Price, Volume);
+                EmitFilled(order, Price, Volume, CommType.Absolute, 0);
 
                 //成交完全，清理
                 if (LeavesQty <= 0)
@@ -478,6 +495,13 @@ namespace QuantBox.OQ.CTPZQ
             string strKey = string.Format("{0}:{1}:{2}", pInputOrderAction.FrontID, pInputOrderAction.SessionID, pInputOrderAction.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
+                OrdStatus status;
+                if (_PendingCancelFlags.TryGetValue(order, out status))
+                {
+                    _PendingCancelFlags.Remove(order);
+                    EmitExecutionReport(order, status);
+                }
+
                 tdlog.Error("CTPZQ回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
                         pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice,
                         pInputOrderAction.VolumeChange,
@@ -495,6 +519,13 @@ namespace QuantBox.OQ.CTPZQ
             string strKey = string.Format("{0}:{1}:{2}", pOrderAction.FrontID, pOrderAction.SessionID, pOrderAction.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
+                OrdStatus status;
+                if (_PendingCancelFlags.TryGetValue(order, out status))
+                {
+                    _PendingCancelFlags.Remove(order);
+                    EmitExecutionReport(order, status);
+                }
+
                 tdlog.Error("交易所回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
                         pOrderAction.InstrumentID, pOrderAction.LimitPrice,
                         pOrderAction.VolumeChange,

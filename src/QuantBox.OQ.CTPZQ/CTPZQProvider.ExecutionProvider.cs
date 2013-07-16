@@ -16,7 +16,6 @@ namespace QuantBox.OQ.CTPZQ
 
         public event ExecutionReportEventHandler ExecutionReport;
         public event OrderCancelRejectEventHandler OrderCancelReject;
-        private int nGetBrokerInfoCount;
 
         public BrokerInfo GetBrokerInfo()
         {
@@ -159,17 +158,23 @@ namespace QuantBox.OQ.CTPZQ
 
         public void EmitExecutionReport(SingleOrder order, OrdStatus status, string text)
         {
-            OrderRecord record = this.orderRecords[order];
-            EmitExecutionReport(record, status, 0.0, 0, text);
+            OrderRecord record = orderRecords[order];
+            EmitExecutionReport(record, status, 0.0, 0, text, CommType.Absolute, 0);
         }
 
         public void EmitExecutionReport(SingleOrder order, double price, int quantity)
         {
-            OrderRecord record = this.orderRecords[order];
-            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "");
+            OrderRecord record = orderRecords[order];
+            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "", CommType.Absolute, 0);
         }
 
-        private void EmitExecutionReport(OrderRecord record, OrdStatus ordStatus, double lastPx, int lastQty, string text)
+        public void EmitExecutionReport(SingleOrder order, double price, int quantity, CommType commType, double commission)
+        {
+            OrderRecord record = orderRecords[order];
+            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "", commType, commission);
+        }
+
+        private void EmitExecutionReport(OrderRecord record, OrdStatus ordStatus, double lastPx, int lastQty, string text, CommType commType, double commission)
         {
             ExecutionReport report = new ExecutionReport
             {
@@ -181,7 +186,10 @@ namespace QuantBox.OQ.CTPZQ
                 SecurityType = record.Order.SecurityType,
                 SecurityExchange = record.Order.SecurityExchange,
                 Currency = record.Order.Currency,
+                CommType = commType,
+                Commission = commission,
                 Side = record.Order.Side,
+
                 OrdType = record.Order.OrdType,
                 TimeInForce = record.Order.TimeInForce,
                 OrderQty = record.Order.OrderQty,
@@ -190,6 +198,26 @@ namespace QuantBox.OQ.CTPZQ
                 LastPx = lastPx,
                 LastQty = lastQty
             };
+
+            if (ordStatus == OrdStatus.Replaced)
+            {
+                report.OrdType = record.Order.ReplaceOrder.ContainsField(EFIXField.OrdType) ? record.Order.ReplaceOrder.OrdType : record.Order.OrdType;
+                report.TimeInForce = record.Order.ReplaceOrder.ContainsField(EFIXField.TimeInForce) ? record.Order.ReplaceOrder.TimeInForce : record.Order.TimeInForce;
+                report.OrderQty = record.Order.ReplaceOrder.ContainsField(EFIXField.OrderQty) ? record.Order.ReplaceOrder.OrderQty : record.Order.OrderQty;
+                report.Price = record.Order.ReplaceOrder.ContainsField(EFIXField.Price) ? record.Order.ReplaceOrder.Price : record.Order.Price;
+                report.StopPx = record.Order.ReplaceOrder.ContainsField(EFIXField.StopPx) ? record.Order.ReplaceOrder.StopPx : record.Order.StopPx;
+                record.LeavesQty = ((int)report.OrderQty) - record.CumQty;
+            }
+            else
+            {
+                report.OrdType = record.Order.OrdType;
+                report.TimeInForce = record.Order.TimeInForce;
+                report.OrderQty = record.Order.OrderQty;
+                report.Price = record.Order.Price;
+                report.StopPx = record.Order.StopPx;
+            }
+
+
             if (ordStatus == OrdStatus.Undefined)
             {
                 record.AddFill(lastPx, lastQty);
@@ -205,7 +233,7 @@ namespace QuantBox.OQ.CTPZQ
             report.AvgPx = record.AvgPx;
             report.CumQty = record.CumQty;
             report.LeavesQty = record.LeavesQty;
-            report.ExecType = this.GetExecType(ordStatus);
+            report.ExecType = CTPZQProvider.GetExecType(ordStatus);
             report.OrdStatus = ordStatus;
             report.Text = text;
 
@@ -220,6 +248,16 @@ namespace QuantBox.OQ.CTPZQ
         protected void EmitCancelled(SingleOrder order)
         {
             EmitExecutionReport(order, OrdStatus.Cancelled);
+        }
+
+        protected void EmitExpired(SingleOrder order)
+        {
+            EmitExecutionReport(order, OrdStatus.Expired);
+        }
+
+        protected void EmitPendingCancel(SingleOrder order)
+        {
+            EmitExecutionReport(order, OrdStatus.PendingCancel);
         }
 
         protected void EmitCancelReject(SingleOrder order, OrdStatus status, string message)
@@ -239,9 +277,9 @@ namespace QuantBox.OQ.CTPZQ
             EmitOrderCancelReject(reject);
         }
 
-        protected void EmitFilled(SingleOrder order, double price, int quantity)
+        protected void EmitFilled(SingleOrder order, double price, int quantity, CommType commType, double commission)
         {
-            EmitExecutionReport(order, price, quantity);
+            EmitExecutionReport(order, price, quantity, commType, commission);
         }
 
         protected void EmitRejected(SingleOrder order, string message)
@@ -249,7 +287,7 @@ namespace QuantBox.OQ.CTPZQ
             EmitExecutionReport(order, OrdStatus.Rejected, message);
         }
 
-        private ExecType GetExecType(OrdStatus status)
+        private static ExecType GetExecType(OrdStatus status)
         {
             switch (status)
             {
@@ -269,6 +307,8 @@ namespace QuantBox.OQ.CTPZQ
                     return ExecType.Rejected;
                 case OrdStatus.PendingReplace:
                     return ExecType.PendingReplace;
+                case OrdStatus.Expired:
+                    return ExecType.Expired;
             }
             throw new ArgumentException(string.Format("Cannot find exec type for ord status - {0}", status));
         }
