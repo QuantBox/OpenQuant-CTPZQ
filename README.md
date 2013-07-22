@@ -1,4 +1,4 @@
-# OpenQuant内盘证券插件
+# OpenQuant内盘证券插件(与OpenQuant-CTP进行了合并，本项目不再更新)
 
 ## 目的
 将OpenQuant与国内的CTP证券进行对接，让OpenQuant直接能交易国内证券
